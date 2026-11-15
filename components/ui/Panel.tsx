@@ -1,0 +1,50 @@
+"use client";
+import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import type { SxProps, Theme } from "@mui/material/styles";
+import { useId, useState, type ReactNode } from "react";
+
+/** Compact panel header: title, optional subtitle, right-aligned actions and an optional collapse toggle. */
+export function PanelHeader({ title, subtitle, actions, id }: { title: string; subtitle?: string; actions?: ReactNode; id?: string }) {
+  return (
+    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap", minWidth: 0 }}>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography variant="h3" component="h2" id={id}>{title}</Typography>
+        {subtitle ? <Typography variant="meta" color="text.secondary" component="p">{subtitle}</Typography> : null}
+      </Box>
+      {actions ? <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>{actions}</Box> : null}
+    </Box>
+  );
+}
+
+/** Flat bordered surface with a compact header. `flush` removes body padding (tables); `collapsible` adds an accessible toggle. */
+export function Panel({ title, subtitle, actions, collapsible, defaultOpen = true, flush, children, sx }: {
+  title: string; subtitle?: string; actions?: ReactNode; collapsible?: boolean; defaultOpen?: boolean; flush?: boolean; children: ReactNode; sx?: SxProps<Theme>;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const uid = useId();
+  const bodyId = `${uid}-body`;
+  const toggle = collapsible ? (
+    <IconButton size="small" aria-expanded={open} aria-controls={bodyId} aria-label={`${open ? "Collapse" : "Expand"} ${title}`} onClick={() => setOpen((o) => !o)}
+      sx={{ "& svg": { transition: (t) => t.transitions.create("transform", { duration: 120 }), transform: open ? "none" : "rotate(-90deg)" } }}><ExpandMoreRounded fontSize="small" /></IconButton>
+  ) : null;
+  return (
+    <Card component="section" aria-labelledby={`${uid}-title`} sx={[{ minWidth: 0, display: "flex", flexDirection: "column" }, ...(Array.isArray(sx) ? sx : [sx])]}>
+      <Box sx={{ px: 2, py: 1.25, borderBottom: open ? 1 : 0, borderColor: "divider" }}>
+        <PanelHeader id={`${uid}-title`} title={title} subtitle={subtitle} actions={<>{actions}{toggle}</>} />
+      </Box>
+      <Collapse in={open} id={bodyId} unmountOnExit={false} sx={{ flex: 1 }}>
+        <Box sx={{ p: flush ? 0 : 2, height: "100%" }}>{children}</Box>
+      </Collapse>
+    </Card>
+  );
+}
+
+/** Fixed-height chart region with an accessible name. */
+export function ChartArea({ height = 220, label, children }: { height?: number; label: string; children: ReactNode }) {
+  return <Box role="img" aria-label={label} sx={{ height, width: "100%", minWidth: 0 }}>{children}</Box>;
+}
