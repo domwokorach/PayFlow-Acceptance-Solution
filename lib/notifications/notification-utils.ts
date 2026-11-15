@@ -27,6 +27,8 @@ export class NotificationQueue {
   constructor(private readonly dedupeMs = DEDUPE_MS, private readonly maxQueue = MAX_QUEUE) {}
 
   get pending(): readonly QueuedNotification[] { return this.queue; }
+  snapshot(): { current: QueuedNotification | null; open: boolean } { return { current: this.current, open: this.open }; }
+  currentId(): number | undefined { return this.current?.id; }
   allocId() { return ++this.seq; }
 
   offer(input: NotifyInput, id = this.allocId(), now = Date.now()): { status: "shown" | "queued" | "duplicate"; item: QueuedNotification } {

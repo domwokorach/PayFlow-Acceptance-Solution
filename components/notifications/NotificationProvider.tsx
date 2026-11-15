@@ -2,7 +2,7 @@
 import Box from "@mui/material/Box";
 import Snackbar, { type SnackbarCloseReason } from "@mui/material/Snackbar";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { createContext, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
+import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode, type SyntheticEvent } from "react";
 import type { NotificationApi, NotificationRecord, NotifyFn, NotifyInput, NotifyOptions, QueuedNotification } from "../../lib/notifications/notification-types";
 import { durationOf, ENTER_MS, EXIT_MS, NotificationQueue } from "../../lib/notifications/notification-utils";
 import { NotificationToast, TopTransition } from "./NotificationToast";
@@ -14,22 +14,21 @@ const HISTORY_LIMIT = 50;
 
 /** Centralised popups and the notification centre's history. Everything here lives in this tab's memory. */
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const queue = useRef<NotificationQueue>(null as unknown as NotificationQueue);
-  if (!queue.current) queue.current = new NotificationQueue();
+  const [queue] = useState(() => new NotificationQueue()); // one mutable queue for the provider's lifetime
   const [current, setCurrent] = useState<QueuedNotification | null>(null);
   const [open, setOpen] = useState(false);
   const [announce, setAnnounce] = useState<{ id: number; polite: boolean; text: string } | null>(null);
   const [history, setHistory] = useState<NotificationRecord[]>([]);
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
 
-  const sync = useCallback(() => { setCurrent(queue.current.current); setOpen(queue.current.open); }, []);
+  const sync = useCallback(() => { const s = queue.snapshot(); setCurrent(s.current); setOpen(s.open); }, [queue]);
   const announceItem = useCallback((item: QueuedNotification) => {
     const assertive = item.type === "error" || item.type === "warning";
     setAnnounce({ id: item.id, polite: !assertive, text: item.description ? `${item.title}. ${item.description}` : item.title });
   }, []);
 
   const notifyInput = useCallback((input: NotifyInput) => {
-    const q = queue.current;
+    const q = queue;
     const record = (id: number) => setHistory((h) => [{ id, type: input.type, category: input.category ?? "system", title: input.title, description: input.description, createdAt: Date.now(), read: false, action: input.action }, ...h].slice(0, HISTORY_LIMIT));
     if (input.silent) { const id = q.allocId(); record(id); return id; }
     const r = q.offer(input);
@@ -37,24 +36,24 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     record(r.item.id);
     if (r.status === "shown") { sync(); announceItem(r.item); }
     return r.item.id;
-  }, [sync, announceItem]);
+  }, [queue, sync, announceItem]);
 
   const notify = useMemo<NotifyFn>(() => {
     const make = (type: NotifyInput["type"]) => (title: string, options?: NotifyOptions) => notifyInput({ ...options, type, title });
     return Object.assign((input: NotifyInput) => notifyInput(input), { success: make("success"), error: make("error"), warning: make("warning"), info: make("info") });
   }, [notifyInput]);
 
-  const close = useCallback((id: number) => { if (queue.current.close(id)) sync(); }, [sync]);
-  const dismiss = useCallback((id?: number) => { const target = id ?? queue.current.current?.id; if (target !== undefined) close(target); }, [close]);
-  const dismissAll = useCallback(() => { queue.current.clearPending(); dismiss(); }, [dismiss]);
+  const close = useCallback((id: number) => { if (queue.close(id)) sync(); }, [queue, sync]);
+  const dismiss = useCallback((id?: number) => { const target = id ?? queue.currentId(); if (target !== undefined) close(target); }, [queue, close]);
+  const dismissAll = useCallback(() => { queue.clearPending(); dismiss(); }, [queue, dismiss]);
 
   const onExited = useCallback(() => {
-    const next = queue.current.advance();
+    const next = queue.advance();
     sync();
     if (next) announceItem(next); else setAnnounce(null);
-  }, [sync, announceItem]);
+  }, [queue, sync, announceItem]);
 
-  useEffect(() => { const q = queue.current; return () => q.reset(); }, []);
+  useEffect(() => () => queue.reset(), [queue]);
 
   const markRead = useCallback((id: number) => setHistory((h) => h.map((n) => (n.id === id ? { ...n, read: true } : n))), []);
   const markAllRead = useCallback(() => setHistory((h) => h.map((n) => (n.read ? n : { ...n, read: true }))), []);

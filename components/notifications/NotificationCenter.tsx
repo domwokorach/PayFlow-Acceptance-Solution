@@ -34,7 +34,6 @@ export function NotificationCenter() {
 
   useEffect(() => {
     if (!open) return;
-    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 30_000); // keep "2m ago" honest while the panel stays open
     return () => clearInterval(t);
   }, [open]);
@@ -43,7 +42,7 @@ export function NotificationCenter() {
   return (
     <>
       <Tooltip title="Notifications">
-        <IconButton aria-label={label} aria-haspopup="dialog" aria-expanded={open} onClick={(e) => setAnchor(e.currentTarget)}>
+        <IconButton aria-label={label} aria-haspopup="dialog" aria-expanded={open} onClick={(e) => { setNow(Date.now()); setAnchor(e.currentTarget); }}>
           <Badge color="error" badgeContent={unreadCount} max={9} sx={{ "& .MuiBadge-badge": { fontSize: "0.625rem", height: 16, minWidth: 16 } }}><NotificationsNoneOutlined fontSize="small" /></Badge>
         </IconButton>
       </Tooltip>

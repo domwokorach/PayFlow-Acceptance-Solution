@@ -16,7 +16,6 @@ import { useMemo, useState } from "react";
 import { isCaptured, kpis } from "../../lib/analytics";
 import { formatDate, formatMoney } from "../../lib/api";
 import { useData } from "../../lib/data";
-import type { Payment } from "../../lib/types";
 import { EditMerchantDialog } from "../../components/merchants/EditMerchantDialog";
 import { PaymentsTable } from "../../components/payments/PaymentsTable";
 import { ApiError } from "../../components/ui/ApiError";
@@ -37,11 +36,12 @@ export default function MerchantsPage() {
   const [open, setOpen] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   // Profiles come from the merchants API; transaction statistics are aggregated from the loaded payments.
+  const [now] = useState(() => Date.now()); // "active" is judged as of page load; keeps render pure
   const merchants = useMemo(() => profiles.map((profile) => {
     const rows = payments.filter((p) => p.merchantId === profile.id);
     const last = rows.reduce((a, p) => (p.createdAt > a ? p.createdAt : a), "");
-    return { id: profile.id, profile, rows, k: kpis(rows), last, active: !!last && Date.now() - new Date(last).getTime() < 30 * DAY };
-  }), [payments, profiles]);
+    return { id: profile.id, profile, rows, k: kpis(rows), last, active: !!last && now - new Date(last).getTime() < 30 * DAY };
+  }), [payments, profiles, now]);
   const selected = merchants.find((m) => m.id === (open ?? merchants[0]?.id));
 
   return (

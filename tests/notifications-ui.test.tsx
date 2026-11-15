@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { useEffect } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider } from "@mui/material/styles";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
@@ -18,7 +19,7 @@ const payments: Payment[] = [{ id: "aaaaaaaa-0000-0000-0000-000000000001", merch
 vi.mock("../lib/data", () => ({ useData: () => ({ payments, select: selectSpy }) }));
 
 let api!: NotificationApi;
-function Probe() { api = useNotification(); return null; }
+function Probe() { const current = useNotification(); useEffect(() => { api = current; }); return null; }
 
 function stubMatchMedia(reduced: boolean) {
   window.matchMedia = ((query: string) => ({

@@ -199,7 +199,7 @@ function Inner({ children }: { children: ReactNode }) {
 
   const payments = useMemo(() => paymentsQ.data ?? [], [paymentsQ.data]);
   const paymentsRef = useRef<Payment[]>([]);
-  paymentsRef.current = payments;
+  useEffect(() => { paymentsRef.current = payments; }, [payments]); // read by event handlers only, never during render
   const payment = (id: string) => paymentsRef.current.find((p) => p.id === id);
   const merchants = useMemo(() => merchantsQ.data ?? [], [merchantsQ.data]);
   const summary: Summary | null = summaryQ.data ?? null;
