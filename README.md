@@ -1,12 +1,3 @@
-## Overview
-
-PayFlow is a payment acceptance and operations platform: a Spring Boot REST API, a PostgreSQL-backed double-entry-style financial journal, and a responsive Next.js merchant dashboard. It covers payment authorization, capture, partial and full refunds, merchant profiles, payment providers, transaction analytics, reconciliation, and database-backed idempotency.
-
-**This is a local development and sandbox project.** Payments, providers and ledger amounts are simulated. It is not production-ready, has not been certified for live payments, does not process real money, and is not affiliated with Visa or any card network. See [SECURITY.md](SECURITY.md).
-=======
-  <img src="docs/logo-readme.png" alt="PayFlow Acceptance Solution" width="320">
-</p>
-
 # PayFlow Acceptance Solution
 
 > A payment acceptance operations dashboard for monitoring transactions, managing merchants, and exploring a payments REST API. **Local sandbox with simulated payments. No real money moves.**
