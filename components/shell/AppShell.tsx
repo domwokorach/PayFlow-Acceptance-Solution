@@ -50,9 +50,18 @@ function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavig
   const [closed, setClosed] = useState<Record<string, boolean>>({});
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <Toolbar disableGutters variant="dense" sx={{ gap: 1, px: collapsed ? 1.5 : 2, minHeight: BAR, justifyContent: collapsed ? "center" : "flex-start", borderBottom: 1, borderColor: "divider" }}>
-        <Box aria-hidden sx={{ width: 28, height: 28, borderRadius: 1, bgcolor: "primary.dark", color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}><BrandIcon sx={{ fontSize: 18 }} /></Box>
-        {!collapsed && <Typography variant="h3" component="span">PayFlow</Typography>}
+      <Toolbar disableGutters variant="dense" sx={{ px: 1.5, minHeight: BAR, justifyContent: collapsed ? "center" : "flex-start", borderBottom: 1, borderColor: "divider" }}>
+        <Link href="/" aria-label="PayFlow home" onClick={onNavigate} style={{ display: "flex", width: collapsed ? "auto" : "100%" }}>
+          {collapsed ? (
+            <Box aria-hidden sx={{ width: 28, height: 28, borderRadius: 1, bgcolor: "primary.dark", color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}><BrandIcon sx={{ fontSize: 18 }} /></Box>
+          ) : (
+            // White wordmark sits on a dark plate to stay legible in light mode.
+            <Box sx={{ bgcolor: "#0B1220", borderRadius: 1, px: 1, py: 0.25, display: "flex", alignItems: "center" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="PayFlow Acceptance Solution" height={32} style={{ display: "block", height: 32, width: "auto" }} />
+            </Box>
+          )}
+        </Link>
       </Toolbar>
       <Box component="nav" aria-label="Primary" sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", px: 1, py: 1 }}>
         {NAV.map((g) => {
@@ -143,6 +152,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         <AppBar position="sticky" color="inherit" elevation={0} sx={{ bgcolor: "background.paper", borderBottom: 1, borderColor: "divider", color: "text.primary" }}>
           <Toolbar variant="dense" disableGutters sx={{ gap: { xs: 0.5, sm: 1 }, minHeight: { xs: 52, sm: BAR }, px: { xs: 1, sm: 2 } }}>
             <IconButton aria-label="Open navigation" onClick={() => setMobileOpen(true)} sx={{ display: { lg: "none" } }}><MenuRounded /></IconButton>
+            {/* Below lg the sidebar is hidden, so the header carries the logo. White wordmark needs a dark plate. */}
+            <Link href="/" aria-label="PayFlow home" style={{ display: "flex" }}>
+              <Box sx={{ display: { xs: "flex", lg: "none" }, bgcolor: "#0B1220", borderRadius: 1, px: 0.75, py: 0.25 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="" height={28} style={{ display: "block", height: 28, width: "auto" }} />
+              </Box>
+            </Link>
             <Tooltip title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
               <IconButton aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} onClick={toggleCollapsed} sx={{ display: { xs: "none", lg: "inline-flex" } }}>{collapsed ? <ChevronRightRounded /> : <ChevronLeftRounded />}</IconButton>
             </Tooltip>
