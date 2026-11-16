@@ -1,0 +1,82 @@
+# Jenkins Configuration as Code for PayFlow. Secrets come from environment variables, never from this file.
+jenkins:
+  systemMessage: "PayFlow CI. Local development instance: reachable on localhost only."
+  numExecutors: 0              # the controller never runs builds; the isolated agent does
+  mode: EXCLUSIVE
+  quietPeriod: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+        - id: "payflow-agent"
+          password: "${JENKINS_AGENT_PASSWORD}"
+  authorizationStrategy:
+    projectMatrix:
+      entries:
+        - user:
+            name: "admin"
+            permissions: ["Overall/Administer"]
+        # Can only read the front page and connect agents. This is the account the build agent container holds.
+        - user:
+            name: "payflow-agent"
+            permissions: ["Overall/Read", "Agent/Connect"]
+  # CSRF protection (crumb issuer) is on by default and is left at its secure default.
+  nodes:
+    - permanent:
+        name: "payflow-agent"
+        labelString: "payflow-agent"
+        remoteFS: "/home/jenkins/agent"
+        numExecutors: 1
+        mode: EXCLUSIVE
+        retentionStrategy: "always"
+        launcher:
+          inbound:
+            webSocket: true
+
+security:
+  globalJobDslSecurityConfiguration:
+    useScriptSecurity: false    # the only Job DSL script is the one in this file
+  scriptApproval:
+    approvedSignatures: []
+
+unclassified:
+  location:
+    url: "http://localhost:8081/"
+    adminAddress: "admin@localhost"
+  gitHubPluginConfig:
+    hookUrl: "http://localhost:8081/github-webhook/"
+
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "git"
+
+jobs:
+  - script: >
+      pipelineJob('PayFlow - CI Pipeline') {
+        description('''Builds and tests PayFlow: backend unit + Testcontainers integration tests, frontend lint/tests/build,
+          isolated end-to-end run, security checks and reports. The pipeline itself is the Jenkinsfile in the repository root.''')
+        // Build retention, concurrency and parameters are declared in the Jenkinsfile, so they are versioned with the code.
+        triggers {
+          githubPush()              // active once the GitHub webhook points at /github-webhook/
+          scm('H/15 * * * *')       // polling fallback while no webhook is reachable
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url(System.getenv('PAYFLOW_GIT_URL') ?: 'https://github.com/OWNER/payflow-platform.git')
+                  if (System.getenv('PAYFLOW_GIT_CREDENTIALS_ID')) { credentials(System.getenv('PAYFLOW_GIT_CREDENTIALS_ID')) }
+                }
+                branches(System.getenv('PAYFLOW_GIT_BRANCH') ?: '*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(false)
+          }
+        }
+      }

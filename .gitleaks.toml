@@ -1,0 +1,13 @@
+# gitleaks configuration for PayFlow (used by the Jenkins "Security Checks" stage).
+title = "PayFlow gitleaks config"
+
+[extend]
+useDefault = true   # keep every built-in rule
+
+# The ONE intentional exception: the documented local-only demo API key. It appears in README curl examples and docker-compose
+# and is explicitly not a secret (the README says "Do not deploy this milestone publicly"). Exact value only; any other key,
+# token or password is still reported.
+[[allowlists]]
+description = "Documented local-only demo API key"
+regexTarget = "match"   # test the whole matched text: the README curl commands span several lines
+regexes = ['''local-only-change-me''']

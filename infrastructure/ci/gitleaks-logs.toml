@@ -1,0 +1,28 @@
+# gitleaks configuration for the BUILD'S OWN logs and reports (JUnit XML, e2e stack log, dependency scan output).
+# Goal: make sure no real credential, and in particular no Visa key or shared secret, is written into anything Jenkins archives.
+title = "PayFlow gitleaks: build logs and reports"
+
+[extend]
+useDefault = true                 # private keys, cloud and GitHub/Slack tokens, JWTs, ... all stay on
+disabledRules = ["generic-api-key"]   # entropy-based guess; it flags Spring's throwaway "Using generated security password" line
+                                      # (an unusable in-memory account: form login and HTTP basic are disabled) and test fixtures
+
+[[rules]]
+id = "payflow-visa-shared-secret"
+description = "Visa shared secret value in a log or report"
+regex = '''(?i)(?:shared[_.-]?secret|PAYFLOW_VISA_SHARED_SECRET)["']?\s*[=:]\s*["']?([A-Za-z0-9+/]{32,}={0,2})'''
+secretGroup = 1
+keywords = ["secret"]
+
+[[rules]]
+id = "payflow-visa-key-id"
+description = "Visa REST key id value in a log or report"
+regex = '''(?i)(?:PAYFLOW_VISA_KEY_ID|visa[_.-]?key[_.-]?id)["']?\s*[=:]\s*["']?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'''
+secretGroup = 1
+keywords = ["key"]
+
+# The dummy value the tests use for the shared secret ("test-secret-test-secret", base64).
+[[allowlists]]
+description = "Dummy Visa shared secret used by the automated tests"
+regexTarget = "match"
+regexes = ['''dGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQ=''']

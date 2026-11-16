@@ -1,0 +1,38 @@
+# Isolated end-to-end stack, started INSIDE the Jenkins build's Docker-in-Docker daemon (never on the host's Docker).
+# Fresh, throwaway data on every run. The simulator provider only: no Visa credentials, no outbound payment-provider traffic.
+# Ports are published on the DinD host, which the build agent reaches as http://docker:<port>.
+name: payflow-e2e
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment: { POSTGRES_DB: payflow, POSTGRES_USER: payflow, POSTGRES_PASSWORD: e2e-only-password }
+    tmpfs: ["/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payflow -d payflow"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  backend:
+    build: ../../backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/payflow
+      DB_USER: payflow
+      DB_PASSWORD: e2e-only-password
+      PAYFLOW_DEMO_API_KEY: ${E2E_API_KEY:-e2e-test-key-0000000000}
+      # Off unless the OPTIONAL sandbox smoke stage passes credentials from the Jenkins credential store.
+      PAYFLOW_VISA_ENABLED: ${PAYFLOW_VISA_ENABLED:-false}
+      PAYFLOW_VISA_MERCHANT_ID: ${PAYFLOW_VISA_MERCHANT_ID:-}
+      PAYFLOW_VISA_KEY_ID: ${PAYFLOW_VISA_KEY_ID:-}
+      PAYFLOW_VISA_SHARED_SECRET: ${PAYFLOW_VISA_SHARED_SECRET:-}
+      PAYFLOW_RECONCILER_ENABLED: "true"
+      PAYFLOW_OTLP_ENABLED: "false"
+      MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "false"
+    depends_on: { postgres: { condition: service_healthy } }
+    ports: ["8080:8080"]
+  frontend:
+    build: ../../frontend
+    environment:
+      PAYFLOW_API_ORIGIN: http://backend:8080
+      PAYFLOW_DEMO_API_KEY: ${E2E_API_KEY:-e2e-test-key-0000000000}
+    depends_on: [backend]
+    ports: ["3000:3000"]

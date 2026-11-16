@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: payflow-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/payflow}
+    username: ${DB_USER:payflow}
+    password: ${DB_PASSWORD:payflow_local}
+  flyway:
+    enabled: true
+  sql:
+    init:
+      mode: never
+server:
+  port: 8080
+payflow:
+  seed-demo-data: ${PAYFLOW_SEED_DEMO_DATA:false}
+  reconciler:
+    enabled: ${PAYFLOW_RECONCILER_ENABLED:true}
+    interval-ms: ${PAYFLOW_RECONCILER_INTERVAL_MS:30000}
+  demo-api-key: ${PAYFLOW_DEMO_API_KEY:local-only-change-me}
+  bootstrap-keys: ${PAYFLOW_BOOTSTRAP_KEYS:}
+  visa:
+    enabled: ${PAYFLOW_VISA_ENABLED:false}
+    merchant-id: ${PAYFLOW_VISA_MERCHANT_ID:}
+    key-id: ${PAYFLOW_VISA_KEY_ID:}
+    shared-secret: ${PAYFLOW_VISA_SHARED_SECRET:}
+management:
+  tracing:
+    sampling:
+      probability: ${PAYFLOW_TRACE_SAMPLING:1.0}
+    export:
+      otlp:
+        enabled: ${PAYFLOW_OTLP_ENABLED:false}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${PAYFLOW_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

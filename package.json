@@ -1,0 +1,40 @@
+{
+  "name": "payflow-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "An enterprise-grade fintech payment processing platform built with Next.js, TypeScript, Material UI, and Java Spring Boot. Features Visa Acceptance Sandbox integration, payment authorization, capture, refunds, merchant management, real-time transaction monitoring, financial analytics, and secure REST APIs.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/domwokorach/PayFlow-Acceptance-Solution.git"
+  },
+  "keywords": [
+    "fintech",
+    "payments",
+    "payment-gateway",
+    "visa",
+    "spring-boot",
+    "java",
+    "nextjs",
+    "react",
+    "typescript",
+    "material-ui",
+    "postgresql",
+    "rest-api",
+    "real-time",
+    "payment-processing",
+    "merchant-management"
+  ],
+  "author": "Dominic Wokorach",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/domwokorach/PayFlow-Acceptance-Solution/issues"
+  },
+  "homepage": "https://github.com/domwokorach/PayFlow-Acceptance-Solution#readme"
+}

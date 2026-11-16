@@ -1,0 +1,21 @@
+# Jenkins plugins for PayFlow CI (resolved by jenkins-plugin-cli against the LTS core in the Dockerfile).
+# Pipeline and SCM
+workflow-aggregator
+pipeline-stage-view
+git
+github
+github-branch-source
+credentials-binding
+plain-credentials
+# Reporting and hygiene
+junit
+ws-cleanup
+timestamper
+build-timeout
+ansicolor
+# Tooling requested for the project. Node itself is baked into the build agent image, so no NodeJS installation is configured.
+nodejs
+# Configuration as code, and the security model the setup relies on
+configuration-as-code
+job-dsl
+matrix-auth

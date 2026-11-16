@@ -1,0 +1,66 @@
+# Jenkins for PayFlow. Start with ./bootstrap.sh (creates .env with generated secrets), then: docker compose up -d --build
+#   controller  http://localhost:8081   (bound to 127.0.0.1 only; no Docker socket; zero executors)
+#   agent       builds run here (JDK 21, Maven, Node 22, Docker CLI)
+#   docker      isolated Docker-in-Docker daemon used by Testcontainers and the end-to-end stack. It cannot see or touch
+#               the host's containers, volumes or the PayFlow dev stack.
+name: payflow-jenkins
+services:
+  docker:
+    image: docker:27-dind
+    restart: unless-stopped
+    privileged: true            # required by dockerd. Contained to this daemon: it is not the host's Docker
+    environment:
+      DOCKER_TLS_CERTDIR: /certs
+    volumes:
+      - dind_certs:/certs
+      - dind_data:/var/lib/docker
+    networks:
+      default:
+        aliases: ["docker"]
+    # No published ports: only the agent can reach it, over mutual TLS.
+
+  jenkins:
+    build: ./controller
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      JENKINS_URL: http://jenkins:8080/
+    ports:
+      - "127.0.0.1:8081:8080"   # localhost only; the agent connects over the compose network
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./casc:/var/jenkins_home/casc:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:8080/login || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  agent:
+    build: ./agent
+    restart: unless-stopped
+    depends_on:
+      jenkins:
+        condition: service_healthy
+      docker:
+        condition: service_started
+    environment:
+      JENKINS_URL: http://jenkins:8080
+      JENKINS_AGENT_NAME: payflow-agent
+      JENKINS_AGENT_USER: payflow-agent
+      JENKINS_AGENT_PASSWORD: ${JENKINS_AGENT_PASSWORD:?run ./bootstrap.sh first}
+    volumes:
+      - dind_certs:/certs:ro
+      - agent_work:/home/jenkins/agent
+      - agent_m2:/home/jenkins/.m2
+      - agent_npm:/home/jenkins/.npm
+      - agent_cache:/home/jenkins/.cache
+
+volumes:
+  jenkins_home:
+  dind_certs:
+  dind_data:
+  agent_work:
+  agent_m2:
+  agent_npm:
+  agent_cache:

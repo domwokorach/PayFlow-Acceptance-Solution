@@ -1,0 +1,14 @@
+# Optional override: build from a LOCAL bare repository instead of GitHub (offline demos, or before the project is pushed).
+#   ./make-local-repo.sh                       -> creates ./local-repo/payflow.git from your working tree (your folder is not touched)
+#   echo 'PAYFLOW_GIT_URL=/srv/payflow.git' >> .env      (then recreate: docker compose -f docker-compose.yml -f docker-compose.local-repo.yml up -d)
+services:
+  jenkins:
+    environment:
+      # The Git plugin refuses local-path repositories by default. Allowed here only, because this override exists for local demos;
+      # the default setup (GitHub over HTTPS) keeps the protection.
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false -Dhudson.model.ParametersAction.keepUndefinedParameters=false -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true"
+    volumes:
+      - ./local-repo/payflow.git:/srv/payflow.git:ro
+  agent:
+    volumes:
+      - ./local-repo/payflow.git:/srv/payflow.git:ro

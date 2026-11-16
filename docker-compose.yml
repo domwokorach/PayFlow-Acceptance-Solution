@@ -1,0 +1,79 @@
+name: payflow
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: payflow
+      POSTGRES_USER: payflow
+      POSTGRES_PASSWORD: payflow_local
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payflow -d payflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/payflow
+      DB_USER: payflow
+      DB_PASSWORD: payflow_local
+      PAYFLOW_DEMO_API_KEY: local-only-change-me
+      SPRING_PROFILES_ACTIVE: demo
+      PAYFLOW_VISA_ENABLED: ${PAYFLOW_VISA_ENABLED:-false}
+      PAYFLOW_VISA_MERCHANT_ID: ${PAYFLOW_VISA_MERCHANT_ID:-}
+      PAYFLOW_VISA_KEY_ID: ${PAYFLOW_VISA_KEY_ID:-}
+      PAYFLOW_VISA_SHARED_SECRET: ${PAYFLOW_VISA_SHARED_SECRET:-}
+      PAYFLOW_SEED_DEMO_DATA: ${PAYFLOW_SEED_DEMO_DATA:-false}
+      PAYFLOW_BOOTSTRAP_KEYS: ${PAYFLOW_BOOTSTRAP_KEYS:-}
+      PAYFLOW_OTLP_ENABLED: ${PAYFLOW_OTLP_ENABLED:-false}
+      PAYFLOW_OTLP_ENDPOINT: ${PAYFLOW_OTLP_ENDPOINT:-http://otel-collector:4318/v1/traces}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    environment:
+      PAYFLOW_API_ORIGIN: http://backend:8080
+      PAYFLOW_DEMO_API_KEY: local-only-change-me
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - backend
+  # Optional: docker compose --profile observability up -d
+  prometheus:
+    profiles: ["observability"]
+    image: prom/prometheus:v3.5.0
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on: [backend]
+  grafana:
+    profiles: ["observability"]
+    image: grafana/grafana:12.1.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-payflow-local}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on: [prometheus]
+  otel-collector:
+    profiles: ["observability"]
+    image: otel/opentelemetry-collector:0.131.0
+    command: ["--config=/etc/otelcol/config.yml"]
+    volumes:
+      - ./observability/otel-collector.yml:/etc/otelcol/config.yml:ro
+volumes:
+  postgres_data:
