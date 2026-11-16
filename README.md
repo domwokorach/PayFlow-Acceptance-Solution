@@ -2,21 +2,18 @@
 
 ## Application screenshots
 ### Payments Dashboard
->>>>>>> 66acd5f (Commit)
 Monitor transactions, payment statuses, authorizations, captures, and refunds.
 
 ![PayFlow Payments Dashboard](docs/images/payments.png)
 
 =======
 ### Developer API Integration
->>>>>>> 66acd5f (Commit)
 Explore REST API endpoints, integration examples, requests, and responses.
 
 ![PayFlow Developer Portal](docs/images/developers.png)
 
 =======
 ### Merchant Management
->>>>>>> 66acd5f (Commit)
 Manage merchant accounts, payment activity, transaction statistics, and merchant profiles.
 
 ![PayFlow Merchant Management](docs/images/merchants.png)
