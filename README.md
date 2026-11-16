@@ -1,5 +1,26 @@
 # PayFlow Acceptance Solution
 
+## Application screenshots
+### Payments Dashboard
+>>>>>>> 66acd5f (Commit)
+Monitor transactions, payment statuses, authorizations, captures, and refunds.
+
+![PayFlow Payments Dashboard](docs/images/payments.png)
+
+=======
+### Developer API Integration
+>>>>>>> 66acd5f (Commit)
+Explore REST API endpoints, integration examples, requests, and responses.
+
+![PayFlow Developer Portal](docs/images/developers.png)
+
+=======
+### Merchant Management
+>>>>>>> 66acd5f (Commit)
+Manage merchant accounts, payment activity, transaction statistics, and merchant profiles.
+
+![PayFlow Merchant Management](docs/images/merchants.png)
+
 > A payment acceptance operations dashboard for monitoring transactions, managing merchants, and exploring a payments REST API. **Local sandbox with simulated payments. No real money moves.**
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
@@ -45,8 +66,6 @@ This repository contains the PayFlow dashboard: a Next.js application that gives
 - **Live updates and notifications:** SSE-driven live status, notification centre, light/dark theme.
 - **Sandbox:** clear sandbox labelling throughout; no real funds move.
 
-## Application screenshots
-
 ### Payments dashboard
 
 =======
@@ -70,35 +89,6 @@ This repository contains the PayFlow dashboard: a Next.js application that gives
 - **Settings** — appearance (light/dark) and sidebar preferences, stored in the browser only.
 - **Sandbox mode** — every payment is simulated; the UI shows a persistent *Sandbox environment* notice.
 
-## Application screenshots
-
-### Payments Dashboard
->>>>>>> 66acd5f (Commit)
-Monitor transactions, payment statuses, authorizations, captures, and refunds.
-
-![PayFlow Payments Dashboard](docs/images/payments.png)
-
-<<<<<<< HEAD
-### Developer API integration
-
-=======
-### Developer API Integration
->>>>>>> 66acd5f (Commit)
-Explore REST API endpoints, integration examples, requests, and responses.
-
-![PayFlow Developer Portal](docs/images/developers.png)
-
-<<<<<<< HEAD
-### Merchant management
-
-=======
-### Merchant Management
->>>>>>> 66acd5f (Commit)
-Manage merchant accounts, payment activity, transaction statistics, and merchant profiles.
-
-![PayFlow Merchant Management](docs/images/merchants.png)
-
-<<<<<<< HEAD
 ## Quick start
 
 Requirements: **Docker Desktop** (with Docker Compose) and enough RAM to run PostgreSQL, Java and Next.js.
