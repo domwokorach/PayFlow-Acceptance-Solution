@@ -189,8 +189,6 @@ curl -s -X POST http://localhost:8080/api/v1/payments \
   -H 'Idempotency-Key: demo_create_0001' \
   -d '{"amountMinor":12500,"currency":"GBP","simulateDecline":false}'
 ```
-
-<<<<<<< HEAD
 Copy the returned `id`, then:
 
 ```bash
