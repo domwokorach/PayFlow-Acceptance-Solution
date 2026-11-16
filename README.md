@@ -1,4 +1,5 @@
 <p align="left">
+<<<<<<< HEAD
   <img src="docs/assets/payflow-logo.png" alt="PayFlow Acceptance Solution" width="320">
 </p>
 
@@ -13,11 +14,40 @@
 PayFlow is a payment acceptance and operations platform: a Spring Boot REST API, a PostgreSQL-backed double-entry-style financial journal, and a responsive Next.js merchant dashboard. It covers payment authorization, capture, partial and full refunds, merchant profiles, payment providers, transaction analytics, reconciliation, and database-backed idempotency.
 
 **This is a local development and sandbox project.** Payments, providers and ledger amounts are simulated. It is not production-ready, has not been certified for live payments, does not process real money, and is not affiliated with Visa or any card network. See [SECURITY.md](SECURITY.md).
+=======
+  <img src="docs/logo-readme.png" alt="PayFlow Acceptance Solution" width="320">
+</p>
+
+# PayFlow Acceptance Solution
+
+> A payment acceptance operations dashboard for monitoring transactions, managing merchants, and exploring a payments REST API. **Local sandbox with simulated payments. No real money moves.**
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-proprietary-lightgrey)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
+![Environment](https://img.shields.io/badge/environment-sandbox-orange)
+
+## Overview
+
+| | |
+|---|---|
+| **Product** | PayFlow Acceptance Solution |
+| **Package** | `payflow-dashboard` |
+| **Version** | `1.0.0` |
+| **Category** | Fintech / Payment Acceptance |
+| **Environment** | Local sandbox, simulated payments |
+
+This repository contains the PayFlow dashboard: a Next.js application that gives operators a live view of payment activity (authorizations, captures, declines and refunds), merchant profiles, provider health, analytics and reconciliation. It talks to a PayFlow REST API (PostgreSQL-backed) through a server-side proxy, so provider and API credentials never reach the browser.
+
+> **Status:** this milestone is for local development and sandbox testing. It is not production-ready, has not been certified for live payment processing, and does not process real funds. See [SECURITY.md](SECURITY.md).
+>>>>>>> 66acd5f (Commit)
 
 ## Technology stack
 
 | Layer | Technology |
 |---|---|
+<<<<<<< HEAD
 | Frontend | Next.js 16, React 19, TypeScript, Material UI, TanStack Query, Recharts |
 | Backend | Java 21, Spring Boot 4.1.2, Spring Security, REST API, Server-Sent Events |
 | Database | PostgreSQL with Flyway migrations |
@@ -40,22 +70,56 @@ PayFlow is a payment acceptance and operations platform: a Spring Boot REST API,
 
 ### Payments dashboard
 
+=======
+| Frontend | Next.js 16 (App Router), React 19, TypeScript |
+| UI | Material UI, Emotion, Recharts, Motion |
+| Data fetching | TanStack Query, Server-Sent Events for live updates |
+| Backend (separate service) | REST API at `/api/v1/*` |
+| Database | PostgreSQL (owned by the backend) |
+| Testing | Vitest, Testing Library, jsdom, V8 coverage |
+| Tooling | ESLint, TypeScript, Docker |
+
+## Dashboard features
+
+- **Payments** — searchable, filterable transaction table (status, 7/30-day windows), payment detail panel, create payment, capture, refund, CSV export.
+- **Merchants** — merchant accounts with transaction counts, captured volume, success rate and last activity; editable merchant profile; recent transactions per merchant.
+- **Connectors** — payment providers with health derived from provider operations.
+- **Analytics** — payment volume, success vs. decline, refund trend, transactions by status and activity by hour.
+- **Reconciliation** — payments awaiting the provider or review, and record discrepancies.
+- **Developers** — REST endpoint reference with copyable request/response examples (create, capture, refund, summary, events).
+- **Notifications** — notification center and toasts, with a live connection indicator.
+- **Settings** — appearance (light/dark) and sidebar preferences, stored in the browser only.
+- **Sandbox mode** — every payment is simulated; the UI shows a persistent *Sandbox environment* notice.
+
+## Application screenshots
+
+### Payments Dashboard
+>>>>>>> 66acd5f (Commit)
 Monitor transactions, payment statuses, authorizations, captures, and refunds.
 
 ![PayFlow Payments Dashboard](docs/images/payments.png)
 
+<<<<<<< HEAD
 ### Developer API integration
 
+=======
+### Developer API Integration
+>>>>>>> 66acd5f (Commit)
 Explore REST API endpoints, integration examples, requests, and responses.
 
 ![PayFlow Developer Portal](docs/images/developers.png)
 
+<<<<<<< HEAD
 ### Merchant management
 
+=======
+### Merchant Management
+>>>>>>> 66acd5f (Commit)
 Manage merchant accounts, payment activity, transaction statistics, and merchant profiles.
 
 ![PayFlow Merchant Management](docs/images/merchants.png)
 
+<<<<<<< HEAD
 ## Quick start
 
 Requirements: **Docker Desktop** (with Docker Compose) and enough RAM to run PostgreSQL, Java and Next.js.
@@ -110,6 +174,46 @@ The API is authenticated with **per-merchant API keys** enforced by Spring Secur
 curl -s http://localhost:8080/api/v1/dashboard/summary \
   -H 'X-Demo-Api-Key: local-only-change-me'
 
+=======
+## Payment processing architecture
+
+```text
+Browser (Next.js + TanStack Query)
+   │  /api/* (no credentials in the browser)
+   ▼
+Next.js server proxy  ── adds API key server-side ──▶  PayFlow REST API  ──▶  PostgreSQL
+   ▲                                                         │
+   └──────────── Server-Sent Events (/api/v1/events/stream) ◀┘
+```
+
+- The browser only calls the Next.js proxy (`app/api/[...path]/route.ts`). The proxy attaches the API key from a server-side environment variable.
+- Payment status shown in the UI is whatever the backend has committed; there are no optimistic updates.
+- Live updates arrive over Server-Sent Events. The header shows **Live** only after the stream is ready; otherwise the dashboard falls back to reconnecting and polling.
+- Money is handled in **minor units** (`12500` = £125.00). The sandbox supports GBP only.
+- Every `POST` carries an `Idempotency-Key`, so retries do not create duplicate payments, captures or refunds.
+
+## REST API
+
+These are the endpoints documented in the in-app **Developers** page. Base path: `/api/v1`.
+
+| Method | Endpoint | Result |
+|---|---|---|
+| GET | `/api/v1/payments` | Latest 100 payments; `?q=` and `?status=` filters |
+| GET | `/api/v1/payments/{id}` | Payment details |
+| POST | `/api/v1/payments` | Create a payment (provider `SIMULATED` or `VISA_SANDBOX`) |
+| POST | `/api/v1/payments/{id}/capture` | Capture the full authorized amount |
+| POST | `/api/v1/payments/{id}/refunds` | Refund an eligible captured payment |
+| POST | `/api/v1/payments/{id}/reconcile` | Check the provider for a pending capture or refund |
+| GET | `/api/v1/dashboard/summary` | Aggregates from PostgreSQL; `?days=7\|30\|0` (0 = all time) |
+| GET | `/api/v1/reconciliation` | Awaiting-provider payments, ledger balance, record discrepancies |
+| GET | `/api/v1/events/stream` | Server-Sent Events; resume with `Last-Event-ID` or `?lastEventId=` |
+
+Every `POST` needs a unique `Idempotency-Key` (8–128 characters: letters, digits, hyphen, underscore). Replaying the same key and payload is safe; reusing the key for a different request returns HTTP `409`.
+
+**Example — create a payment (local sandbox):**
+
+```bash
+>>>>>>> 66acd5f (Commit)
 curl -s -X POST http://localhost:8080/api/v1/payments \
   -H 'Content-Type: application/json' \
   -H 'X-Demo-Api-Key: local-only-change-me' \
@@ -117,6 +221,7 @@ curl -s -X POST http://localhost:8080/api/v1/payments \
   -d '{"amountMinor":12500,"currency":"GBP","simulateDecline":false}'
 ```
 
+<<<<<<< HEAD
 Copy the returned `id`, then:
 
 ```bash
@@ -285,3 +390,88 @@ See [SECURITY.md](SECURITY.md) for the security policy, vulnerability reporting,
 ## Copyright and licensing
 
 Copyright © 2026 PayFlow. All rights reserved. This software is proprietary and unlicensed for use, copying, modification or distribution without written permission. See [LICENSE.md](LICENSE.md) and [COPYRIGHT](COPYRIGHT). "PayFlow" is a placeholder copyright holder until ownership details are confirmed. Visa and other trademarks belong to their respective owners; this project is unaffiliated with them.
+=======
+`local-only-change-me` is a documented placeholder for local sandbox use only. Never use it, or any default key, outside localhost.
+
+## Local development setup
+
+**Requirements:** Node.js 22+, npm, and a running PayFlow REST API (default `http://localhost:8080`). Docker is optional.
+
+```bash
+git clone https://github.com/domwokorach/PayFlow-Acceptance-Solution.git
+cd PayFlow-Acceptance-Solution
+npm install
+cp .env.example .env      # then edit values for your sandbox
+npm run dev               # http://localhost:3000
+```
+
+Production build and container:
+
+```bash
+npm run build
+npm run start
+docker build -t payflow-dashboard .
+```
+
+| Script | Purpose |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm run build` / `npm run start` | Build and serve the app |
+| `npm run lint` | Type check, then ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Run the Vitest suite |
+| `npm run test:coverage` | Tests with coverage |
+| `npm run test:ci` | Coverage plus a JUnit report in `reports/` |
+
+## Environment variables and configuration
+
+Keep real values in a local `.env`, which is excluded from Git. Only `.env.example` is committed.
+
+| Variable | Used by | Purpose |
+|---|---|---|
+| `PAYFLOW_API_ORIGIN` | Dashboard server proxy | Backend origin (default `http://localhost:8080`) |
+| `PAYFLOW_DEMO_API_KEY` | Dashboard server proxy | Local sandbox API key sent as `X-Demo-Api-Key` (server-side only) |
+| `PAYFLOW_VISA_ENABLED` | Backend | Enable the optional Visa sandbox provider (`false` = simulator only) |
+| `PAYFLOW_VISA_MERCHANT_ID`, `PAYFLOW_VISA_KEY_ID`, `PAYFLOW_VISA_SHARED_SECRET` | Backend | Sandbox provider credentials (never expose to the browser) |
+| `PAYFLOW_SEED_DEMO_DATA` | Backend | Synthetic history for UI development only |
+
+## Testing and security
+
+```bash
+npm run typecheck && npm run lint:eslint && npm run test:ci && npm run build
+```
+
+The suite covers notification logic and UI, live-event handling, merchants, payment UI flows, count-up animation, colour contrast and hydration.
+
+Security summary (details in [SECURITY.md](SECURITY.md)):
+
+- API keys and provider credentials stay in server-side environment variables, never in browser JavaScript or Git.
+- Capture and refund calls are idempotent and validated by the backend.
+- This milestone has no end-user login or role-based access control; **do not deploy it publicly**.
+
+## Project structure
+
+```text
+.
+├── app/                 # Next.js routes: payments, merchants, connectors,
+│                        #   analytics, reconciliation, developers, settings
+│   └── api/             # Server-side proxy and event-stream route
+├── components/          # Shell, payments, merchants, notifications, charts, UI kit
+├── hooks/               # React hooks
+├── lib/                 # API client, live updates, analytics, theme, types
+├── public/              # Static assets (logo)
+├── tests/               # Vitest tests
+├── docs/
+│   ├── images/          # README screenshots
+│   └── logo-readme.png  # README logo
+├── COPYRIGHT
+├── LICENSE.md
+├── SECURITY.md
+├── Dockerfile
+└── package.json
+```
+
+## Copyright and licensing
+
+Copyright © 2026 PayFlow. All rights reserved. This is proprietary software, licensed under no open-source licence (`UNLICENSED` in `package.json`). See [COPYRIGHT](COPYRIGHT) and [LICENSE.md](LICENSE.md). PayFlow is a sample application and is not affiliated with Visa or any payment network.
+>>>>>>> 66acd5f (Commit)
