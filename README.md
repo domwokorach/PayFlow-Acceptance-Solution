@@ -348,12 +348,8 @@ Run backend tests with `cd backend && mvn test`; run frontend type checking with
 Copy `.env.example` to `.env` and set values locally. `.env` files are git-ignored; only `.env.example` is tracked. Provider credentials stay in server-side environment variables and are never sent to the browser. See `.env.example` for the full list (for example `PAYFLOW_DEMO_API_KEY`, `PAYFLOW_BOOTSTRAP_KEYS`, `PAYFLOW_VISA_ENABLED`).
 
 ## Security
-
 See [SECURITY.md](SECURITY.md) for the security policy, vulnerability reporting, and sandbox limitations.
 
-## Copyright and licensing
-
-Copyright © 2026 PayFlow. All rights reserved. This software is proprietary and unlicensed for use, copying, modification or distribution without written permission. See [LICENSE.md](LICENSE.md) and [COPYRIGHT](COPYRIGHT). "PayFlow" is a placeholder copyright holder until ownership details are confirmed. Visa and other trademarks belong to their respective owners; this project is unaffiliated with them.
 =======
 `local-only-change-me` is a documented placeholder for local sandbox use only. Never use it, or any default key, outside localhost.
 
