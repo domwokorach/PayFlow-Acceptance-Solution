@@ -1,7 +1,7 @@
 {
   "name": "payflow-dashboard",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
@@ -41,5 +41,40 @@
     "jsdom": "^31.0.1",
     "typescript": "^5.9.0",
     "vitest": "^3.2.7"
-  }
+  },
+  "description": "A modern, secure, and scalable payment acceptance dashboard for PayFlow, providing real-time transaction monitoring, merchant management, payment processing, analytics, reporting, and developer integrations.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/domwokorach/PayFlow-Acceptance-Solution.git"
+  },
+  "keywords": [
+    "payflow",
+    "payflow-dashboard",
+    "fintech",
+    "payments",
+    "payment-processing",
+    "payment-gateway",
+    "merchant-management",
+    "transactions",
+    "analytics",
+    "reporting",
+    "dashboard",
+    "react",
+    "nextjs",
+    "typescript",
+    "api",
+    "secure-payments"
+  ],
+  "author": "Dominic Wokorach",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/domwokorach/PayFlow-Acceptance-Solution/issues"
+  },
+  "homepage": "https://github.com/domwokorach/PayFlow-Acceptance-Solution#readme"
 }
