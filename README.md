@@ -1,5 +1,4 @@
 <p align="left">
-<<<<<<< HEAD
   <img src="docs/assets/payflow-logo.png" alt="PayFlow Acceptance Solution" width="320">
 </p>
 
@@ -47,7 +46,6 @@ This repository contains the PayFlow dashboard: a Next.js application that gives
 
 | Layer | Technology |
 |---|---|
-<<<<<<< HEAD
 | Frontend | Next.js 16, React 19, TypeScript, Material UI, TanStack Query, Recharts |
 | Backend | Java 21, Spring Boot 4.1.2, Spring Security, REST API, Server-Sent Events |
 | Database | PostgreSQL with Flyway migrations |
