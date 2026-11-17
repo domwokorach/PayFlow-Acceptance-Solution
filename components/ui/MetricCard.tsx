@@ -4,6 +4,7 @@ import TrendingDownRounded from "@mui/icons-material/TrendingDownRounded";
 import TrendingUpRounded from "@mui/icons-material/TrendingUpRounded";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
+import IconButton from "@mui/material/IconButton";
 import Skeleton from "@mui/material/Skeleton";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
@@ -36,7 +37,7 @@ export function MetricCard({ label, value, hint, tone = "primary", delta, spark,
     <Card sx={{ height: "100%", px: 1.75, py: 1.5, display: "flex", flexDirection: "column", gap: 0.5, minWidth: 0 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
         <Typography variant="label" color="text.secondary" noWrap>{label}</Typography>
-        {info ? <Tooltip title={info}><Box component="span" tabIndex={0} role="img" aria-label={info} sx={{ display: "inline-flex", color: "text.disabled", borderRadius: 1 }}><InfoOutlined sx={{ fontSize: 14 }} /></Box></Tooltip> : null}
+        {info ? <Tooltip title={info} describeChild><IconButton size="small" aria-label={`About ${label}`} sx={{ p: 0.25, color: "text.secondary" }}><InfoOutlined sx={{ fontSize: 14 }} /></IconButton></Tooltip> : null}
       </Box>
       <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 1, minWidth: 0 }}>
         {loading ? <Skeleton variant="text" sx={{ typography: "metric", width: "55%" }} /> : <Typography variant="metric" sx={{ color: tone === "primary" ? "text.primary" : `${tone}.text`, overflowWrap: "anywhere", position: "relative" }}><AnimatedValue value={value} /></Typography>}

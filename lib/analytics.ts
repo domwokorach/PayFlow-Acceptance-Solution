@@ -83,3 +83,34 @@ export function parseMoney(input: string, maxMinor: number): { minor: number } |
 export const refundableMinor = (p: Payment) => p.amountMinor - p.refundedAmountMinor;
 export const canRefund = (p: Payment) => (p.status === "CAPTURED" || p.status === "PARTIALLY_REFUNDED") && refundableMinor(p) > 0;
 export const canCapture = (p: Payment) => p.status === "AUTHORIZED";
+
+/** One-line spoken summaries and table data for the charts, so their values are available without the graphic. */
+type Money = (minor: number) => string;
+const peakOf = <T,>(rows: T[], by: (r: T) => number) => rows.reduce<T | null>((best, r) => (best === null || by(r) > by(best) ? r : best), null);
+
+export function volumeChartData(series: DayPoint[], money: Money) {
+  const total = series.reduce((a, d) => a + d.capturedMinor, 0), top = peakOf(series, (d) => d.capturedMinor);
+  return {
+    summary: top && total > 0 ? `${series.length} days. Total ${money(total)}. Highest ${top.label}, ${money(top.capturedMinor)}.` : `${series.length} days. No captured volume.`,
+    table: { columns: ["Day", "Captured", "Refunded"], rows: series.map((d) => [d.label, money(d.capturedMinor), money(d.refundedMinor)]) },
+  };
+}
+export function outcomeChartData(series: DayPoint[]) {
+  const ok = series.reduce((a, d) => a + d.successful, 0), no = series.reduce((a, d) => a + d.declined, 0);
+  return { summary: `${series.length} days. ${ok} successful, ${no} declined.`, table: { columns: ["Day", "Successful", "Declined"], rows: series.map((d) => [d.label, d.successful, d.declined]) } };
+}
+export function refundChartData(series: DayPoint[], money: Money) {
+  const total = series.reduce((a, d) => a + d.refundedMinor, 0), top = peakOf(series, (d) => d.refundedMinor);
+  return {
+    summary: top && total > 0 ? `${series.length} days. Total refunded ${money(total)}. Highest ${top.label}, ${money(top.refundedMinor)}.` : `${series.length} days. No refunds.`,
+    table: { columns: ["Day", "Refunded"], rows: series.map((d) => [d.label, money(d.refundedMinor)]) },
+  };
+}
+export function statusChartData(data: { label: string; value: number }[]) {
+  const total = data.reduce((a, d) => a + d.value, 0);
+  return { summary: `${total} payments. ${data.map((d) => `${d.label} ${d.value}`).join(", ")}.`, table: { columns: ["Status", "Payments"], rows: data.map((d) => [d.label, d.value]) } };
+}
+export function hourlyChartData(data: { hour: string; count: number }[]) {
+  const total = data.reduce((a, d) => a + d.count, 0), top = peakOf(data, (d) => d.count);
+  return { summary: top && total > 0 ? `${total} payments. Busiest hour ${top.hour}, ${top.count}.` : "No payments.", table: { columns: ["Hour", "Payments"], rows: data.map((d) => [d.hour, d.count]) } };
+}

@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import Link from "@mui/material/Link";
 import NextLink from "next/link";
 import { useMemo } from "react";
-import { inRange, pctChange } from "../lib/analytics";
+import { inRange, outcomeChartData, pctChange, statusChartData, volumeChartData } from "../lib/analytics";
 import { formatMoney } from "../lib/api";
 import { useData } from "../lib/data";
 import { StatusPie, SuccessDeclineChart, VolumeAreaChart } from "../components/charts/charts";
@@ -73,19 +73,19 @@ export default function DashboardPage() {
 
       <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", lg: "2fr 1fr" }, mb: 1.5 }}>
         <Panel title="Captured volume" subtitle={`Daily gross captured volume (GBP) · ${range === "all" ? "all loaded data" : `last ${days} days`}`} collapsible>
-          <ChartArea height={220} label="Area chart of daily captured payment volume">
+          <ChartArea height={220} label="Area chart of daily captured payment volume" {...volumeChartData(series, formatMoney)}>
             {(t?.total ?? 0) === 0 && !loading ? <EmptyState icon={<HourglassEmptyRounded />} title="No activity in this range" /> : <VolumeAreaChart data={series} />}
           </ChartArea>
         </Panel>
         <Panel title="Status distribution" subtitle="Payments by current status" collapsible>
-          <ChartArea height={220} label="Donut chart of payments by status">
+          <ChartArea height={220} label="Donut chart of payments by status" {...statusChartData(statuses)}>
             {statuses.length === 0 ? <EmptyState title="No payments yet" /> : <StatusPie data={statuses} />}
           </ChartArea>
         </Panel>
       </Box>
       <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", lg: "2fr 1fr" }, mb: 1.5 }}>
         <Panel title="Success vs decline" subtitle="Daily transaction outcomes (count)" collapsible>
-          <ChartArea height={200} label="Stacked bar chart of successful and declined payments per day">
+          <ChartArea height={200} label="Stacked bar chart of successful and declined payments per day" {...outcomeChartData(series)}>
             {(t?.total ?? 0) === 0 ? <EmptyState title="No activity in this range" /> : <SuccessDeclineChart data={series} />}
           </ChartArea>
         </Panel>

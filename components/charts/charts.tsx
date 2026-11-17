@@ -20,7 +20,8 @@ function useChartTheme() {
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
   return {
     animate: !reduced, grid: v.divider, axis: v.text.secondary, text: v.text.primary, paper: v.background.paper,
-    blue: v.primary.main, green: v.success.main, amber: v.warning.main, red: v.error.main,
+    // Marks need 3:1 against the panel, so green and amber use the `text` variants rather than the brighter fills.
+    blue: v.primary.main, green: v.success.text, amber: v.warning.text, red: v.error.main,
     tick: { fontSize: 11, fill: v.text.secondary, fontVariantNumeric: "tabular-nums" },
     // Shared draw-in: bars grow and lines trace left to right with a gentle ease-out. Off under reduced motion.
     draw: { isAnimationActive: !reduced, animationDuration: DRAW_MS, animationEasing: "ease-out" as const },
@@ -62,7 +63,7 @@ export function VolumeAreaChart({ data }: { data: DayPoint[] }) {
   const hasRefunds = data.some((d) => d.refundedMinor > 0);
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+      <AreaChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="volFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={c.blue} stopOpacity={0.22} /><stop offset="100%" stopColor={c.blue} stopOpacity={0} /></linearGradient>
         </defs>
@@ -82,14 +83,21 @@ export function SuccessDeclineChart({ data }: { data: DayPoint[] }) {
   const c = useChartTheme();
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
+      <BarChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
         <CartesianGrid stroke={c.grid} strokeOpacity={0.8} vertical={false} />
         <XAxis dataKey="label" tick={c.tick} {...AXIS} interval={interval(data.length)} />
         <YAxis tick={c.tick} {...AXIS} tickMargin={4} allowDecimals={false} width={32} />
         <Tooltip content={<ChartTooltip format={count} />} cursor={cursor(c)} />
         <Legend verticalAlign="top" align="right" iconType="circle" iconSize={8} height={24} wrapperStyle={{ fontSize: 11 }} />
-        <Bar dataKey="successful" name="Successful" stackId="a" fill={c.green} maxBarSize={20} {...c.draw} />
-        <Bar dataKey="declined" name="Declined" stackId="a" fill={c.red} radius={[3, 3, 0, 0]} maxBarSize={20} {...c.draw} />
+        <defs>
+          {/* Hatching tells Declined apart from Successful without relying on red versus green. */}
+          <pattern id="declinedHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="6" height="6" fill={c.red} />
+            <rect width="2" height="6" fill={c.paper} fillOpacity={0.55} />
+          </pattern>
+        </defs>
+        <Bar dataKey="successful" name="Successful" stackId="a" fill={c.green} stroke={c.paper} strokeWidth={1} maxBarSize={20} {...c.draw} />
+        <Bar dataKey="declined" name="Declined" stackId="a" fill="url(#declinedHatch)" stroke={c.paper} strokeWidth={1} radius={[3, 3, 0, 0]} maxBarSize={20} {...c.draw} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -99,7 +107,7 @@ export function RefundChart({ data }: { data: DayPoint[] }) {
   const c = useChartTheme();
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
+      <BarChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
         <CartesianGrid stroke={c.grid} strokeOpacity={0.8} vertical={false} />
         <XAxis dataKey="label" tick={c.tick} {...AXIS} interval={interval(data.length)} />
         <YAxis tick={c.tick} {...AXIS} tickMargin={4} tickFormatter={compact} width={46} />
@@ -132,7 +140,7 @@ export function StatusPie({ data }: { data: { status: Status; label: string; val
       {/* On phones the donut gives up width so the status names and counts stay readable. */}
       <Box sx={{ position: "relative", flex: { xs: "0 0 38%", sm: "0 0 50%" }, maxWidth: 220, height: "100%", minWidth: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          <PieChart accessibilityLayer={false}>
             <Tooltip content={<ChartTooltip format={count} />} />
             <Pie data={data} dataKey="value" nameKey="label" innerRadius="68%" outerRadius="94%" paddingAngle={2} cornerRadius={3} stroke="none" startAngle={90} endAngle={-270} {...c.draw}>
               {data.map((d) => <Cell key={d.status} fill={colour[d.status]} />)}
@@ -156,14 +164,14 @@ export function HourlyChart({ data }: { data: { hour: string; count: number }[] 
   const peak = Math.max(0, ...data.map((d) => d.count));
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="18%">
+      <BarChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="18%">
         <CartesianGrid stroke={c.grid} strokeOpacity={0.8} vertical={false} />
         <XAxis dataKey="hour" tick={c.tick} {...AXIS} interval={2} />
         <YAxis tick={c.tick} {...AXIS} tickMargin={4} allowDecimals={false} width={32} />
         <Tooltip content={<ChartTooltip format={count} />} cursor={cursor(c)} />
         <Bar dataKey="count" name="Transactions" fill={c.blue} radius={[3, 3, 0, 0]} maxBarSize={18} {...c.draw}>
           {/* The busiest hour is full strength; the rest recede so the peak reads at a glance. */}
-          {data.map((d) => <Cell key={d.hour} fill={c.blue} fillOpacity={peak > 0 && d.count === peak ? 1 : 0.55} />)}
+          {data.map((d) => <Cell key={d.hour} fill={c.blue} fillOpacity={peak > 0 && d.count === peak ? 1 : 0.7} />)}
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -180,7 +188,7 @@ export function Sparkline({ data, tone = "primary", label }: { data: number[]; t
   return (
     <div aria-hidden data-label={label} style={{ width: 72, height: 28, flexShrink: 0 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={points} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+        <LineChart accessibilityLayer={false} data={points} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
           <Line type="monotone" dataKey="v" stroke={c[toneKey[tone]]} strokeWidth={1.5} dot={false} {...c.draw} animationDuration={700} />
         </LineChart>
       </ResponsiveContainer>

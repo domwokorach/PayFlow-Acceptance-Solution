@@ -5,9 +5,9 @@ import { alpha, createTheme } from "@mui/material/styles";
  * `main` colours are used for fills, icons and charts; `text` variants meet WCAG AA for small text.
  */
 export const tokens = {
-  text: "#1F2937", panel: "#FFFFFF", accent: "#3B82F6", up: "#10B981", down: "#EF4444", warn: "#F59E0B",
+  text: "#1F2937", panel: "#FFFFFF", accent: "#2563EB", up: "#10B981", down: "#EF4444", warn: "#F59E0B",
   border: "#E5E7EB", canvas: "#F3F4F6", muted: "#6B7280",
-  successText: "#047857", errorText: "#DC2626", warningText: "#B45309", accentText: "#1D4ED8",
+  successText: "#047857", errorText: "#B91C1C", warningText: "#B45309", accentText: "#1D4ED8",
 };
 
 const font = '"Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
@@ -36,7 +36,7 @@ export const theme = createTheme({
     },
     dark: {
       palette: {
-        primary: { main: "#60A5FA", dark: "#2563EB", light: "#93C5FD", text: "#93C5FD", contrastText: "#0B1220" },
+        primary: { main: "#60A5FA", dark: "#2563EB", light: "#93C5FD", text: "#93C5FD", contrastText: "#FFFFFF" },
         secondary: { main: "#9CA3AF", text: "#9CA3AF" },
         info: { main: "#60A5FA", text: "#93C5FD" },
         success: { main: "#34D399", text: "#6EE7B7" },
@@ -130,7 +130,7 @@ export const theme = createTheme({
         sizeLarge: { minHeight: 40, fontSize: "0.875rem" },
       },
       variants: [
-        // White text on #3B82F6 is only 3.7:1, so filled primary buttons use the darker accent (6.7:1).
+        // Filled primary buttons use primary.dark so label text passes AA in both schemes (white on #1D4ED8 light, white on #2563EB dark, 5.2:1).
         { props: { variant: "contained", color: "primary" }, style: ({ theme: t }) => ({ backgroundColor: t.vars!.palette.primary.dark, color: t.vars!.palette.primary.contrastText, "&:hover": { backgroundColor: t.vars!.palette.primary.dark, filter: "brightness(0.92)" } }) },
         { props: { variant: "outlined", color: "inherit" }, style: ({ theme: t }) => ({ borderColor: t.vars!.palette.divider, "&:hover": { borderColor: t.vars!.palette.text.disabled, backgroundColor: t.vars!.palette.action.hover } }) },
         { props: { variant: "text", color: "primary" }, style: ({ theme: t }) => ({ color: t.vars!.palette.primary.text }) },
