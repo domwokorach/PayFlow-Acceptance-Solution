@@ -75,7 +75,9 @@ export const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: (t) => ({
-        body: { fontFeatureSettings: '"cv11", "calt", "tnum" 0', WebkitFontSmoothing: "antialiased", MozOsxFontSmoothing: "grayscale", fontOpticalSizing: "auto", textRendering: "optimizeLegibility", overflowX: "hidden" },
+        body: { fontFeatureSettings: '"cv11", "calt", "tnum" 0', WebkitFontSmoothing: "antialiased", MozOsxFontSmoothing: "grayscale", fontOpticalSizing: "auto", textRendering: "optimizeLegibility" },
+        // Keep a sticky header from covering the control that has focus (WCAG 2.4.11).
+        html: { scrollPaddingTop: 64 },
         "h1, h2, h3, h4": { textWrap: "balance", margin: 0 },
         "p, li": { textWrap: "pretty" },
         "code:not(pre code)": { fontFamily: mono, fontSize: "0.875em", padding: "0.1em 0.35em", borderRadius: 4, backgroundColor: t.vars!.palette.action.hover },

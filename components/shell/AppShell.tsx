@@ -1,6 +1,7 @@
 "use client";
 
 import AddRounded from "@mui/icons-material/AddRounded";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import ChevronLeftRounded from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
 import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
@@ -21,6 +22,7 @@ import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
@@ -33,7 +35,7 @@ import Typography from "@mui/material/Typography";
 import { alpha, useColorScheme } from "@mui/material/styles";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { useNotification } from "../../hooks/useNotification";
 import { NotificationCenter } from "../notifications/NotificationCenter";
 import { useData } from "../../lib/data";
@@ -48,8 +50,9 @@ const STORE = "payflow.sidebar";
 function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const path = usePathname();
   const [closed, setClosed] = useState<Record<string, boolean>>({});
+  const uid = useId(); // the permanent and mobile drawers both render this, so ids must be unique per instance
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <Box component="nav" aria-label="Primary" sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Toolbar disableGutters variant="dense" sx={{ px: 1.5, minHeight: BAR, justifyContent: collapsed ? "center" : "flex-start", borderBottom: 1, borderColor: "divider" }}>
         <Link href="/" aria-label="PayFlow home" onClick={onNavigate} style={{ display: "flex", width: collapsed ? "auto" : "100%" }}>
           {collapsed ? (
@@ -63,10 +66,10 @@ function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavig
           )}
         </Link>
       </Toolbar>
-      <Box component="nav" aria-label="Primary" sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", px: 1, py: 1 }}>
+      <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", px: 1, py: 1 }}>
         {NAV.map((g) => {
           const open = !closed[g.group];
-          const groupId = `nav-${g.group}`;
+          const groupId = `${uid}-nav-${g.group}`;
           return (
             <Box key={g.group} sx={{ mb: 0.5 }}>
               {collapsed ? <Divider sx={{ my: 1 }} /> : (
@@ -78,7 +81,8 @@ function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavig
                     const active = isActive(item.href, path);
                     const Icon = item.icon;
                     return (
-                      <Tooltip key={item.href} title={collapsed ? item.label : ""} placement="right">
+                      <ListItem key={item.href} disablePadding>
+                      <Tooltip title={collapsed ? item.label : ""} placement="right">
                         <ListItemButton component={Link} href={item.href} selected={active} onClick={onNavigate} aria-current={active ? "page" : undefined} aria-label={collapsed ? item.label : undefined}
                           sx={(t) => ({ minHeight: 32, mb: 0.25, px: collapsed ? 0 : 1.25, justifyContent: collapsed ? "center" : "flex-start", color: "text.secondary",
                             "&:hover": { bgcolor: "action.hover", color: "text.primary" },
@@ -87,6 +91,7 @@ function SidebarContent({ collapsed, onNavigate }: { collapsed: boolean; onNavig
                           {!collapsed && <ListItemText primary={item.label} slotProps={{ primary: { sx: { fontWeight: active ? 600 : 500, fontSize: "0.8125rem" } } }} />}
                         </ListItemButton>
                       </Tooltip>
+                      </ListItem>
                     );
                   })}
                 </List>
@@ -122,12 +127,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [profileEl, setProfileEl] = useState<HTMLElement | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false); // phones only: the search field takes its own row
+  const menuId = useId();
 
   useEffect(() => { try { setCollapsed(localStorage.getItem(STORE) === "1"); } catch { /* storage unavailable */ } }, []);
   const toggleCollapsed = () => setCollapsed((c) => { try { localStorage.setItem(STORE, c ? "0" : "1"); } catch { /* ignore */ } return !c; });
 
   const resolved = mode === "system" ? systemMode : mode;
   const width = collapsed ? MINI : FULL;
+  const toggleTheme = () => { const next = resolved === "dark" ? "light" : "dark"; setMode(next); notify.info("Theme updated", { description: `${next === "dark" ? "Dark" : "Light"} theme is on.`, category: "account" }); };
   // Green only when the event stream is actually established; polling fallback is shown as such.
   const conn = live === "live" ? { tone: "success", label: "Live", tip: "Receiving live updates" } as const
     : error ? { tone: "error", label: "Offline", tip: "Cannot reach the API. Showing the last data received" } as const
@@ -153,7 +161,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Toolbar variant="dense" disableGutters sx={{ gap: { xs: 0.5, sm: 1 }, minHeight: { xs: 52, sm: BAR }, px: { xs: 1, sm: 2 } }}>
             <IconButton aria-label="Open navigation" onClick={() => setMobileOpen(true)} sx={{ display: { lg: "none" } }}><MenuRounded /></IconButton>
             {/* Below lg the sidebar is hidden, so the header carries the logo. White wordmark needs a dark plate. */}
-            <Link href="/" aria-label="PayFlow home" style={{ display: "flex" }}>
+            <Link href="/" aria-label="PayFlow home" style={{ display: "flex", minWidth: 0 }}>
               <Box sx={{ display: { xs: "flex", lg: "none" }, bgcolor: "#0B1220", borderRadius: 1, px: 0.75, py: 0.25 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.png" alt="" height={28} style={{ display: "block", height: 28, width: "auto" }} />
@@ -163,12 +171,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               <IconButton aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} onClick={toggleCollapsed} sx={{ display: { xs: "none", lg: "inline-flex" } }}>{collapsed ? <ChevronRightRounded /> : <ChevronLeftRounded />}</IconButton>
             </Tooltip>
             <TextField
-              size="small" type="search" placeholder="Search payments…" value={query} onChange={(e) => setQuery(e.target.value)}
+              size="small" type="search" placeholder="Search all payments…" value={query} onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") router.push("/payments"); }}
-              slotProps={{ htmlInput: { "aria-label": "Search payments" }, input: { startAdornment: <InputAdornment position="start"><SearchRounded sx={{ fontSize: 18 }} /></InputAdornment> } }}
-              sx={{ flex: 1, maxWidth: 360, "& .MuiOutlinedInput-root": { bgcolor: "background.default" }, "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" } }}
+              slotProps={{ htmlInput: { "aria-label": "Search all payments" }, input: { startAdornment: <InputAdornment position="start"><SearchRounded sx={{ fontSize: 18 }} /></InputAdornment> } }}
+              sx={{ display: { xs: "none", sm: "inline-flex" }, flex: 1, maxWidth: 360, "& .MuiOutlinedInput-root": { bgcolor: "background.default" }, "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" } }}
             />
             <Box sx={{ flex: 1 }} />
+            <IconButton aria-label="Search payments" aria-expanded={searchOpen} onClick={() => setSearchOpen((o) => !o)} sx={{ display: { xs: "inline-flex", sm: "none" } }}><SearchRounded /></IconButton>
             <Tooltip title={`${conn.tip}. ${synced}`}>
               <Box role="status" aria-label="Live updates" tabIndex={0} sx={{ display: "inline-flex", borderRadius: 1, px: 0.5, "& .MuiTypography-root": { position: { xs: "absolute", md: "static" }, width: { xs: 1, md: "auto" }, height: { xs: 1, md: "auto" }, overflow: { xs: "hidden", md: "visible" }, clipPath: { xs: "inset(50%)", md: "none" } } }}>
                 <StatusIndicator tone={conn.tone} label={conn.label} />
@@ -176,21 +185,34 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Tooltip>
             {pendingOps > 0 && <Chip size="small" color="warning" variant="outlined" label={`${pendingOps} pending`} sx={{ display: { xs: "none", md: "inline-flex" }, color: "warning.text", borderColor: "warning.text" }} />}
             <Tooltip title="Refresh now">
-              <span><IconButton aria-label="Refresh data" disabled={refreshing} onClick={() => void refresh()}><RefreshRounded fontSize="small" sx={{ "@media (prefers-reduced-motion: no-preference)": refreshing ? { animation: "pfspin 1s linear infinite", "@keyframes pfspin": { to: { transform: "rotate(360deg)" } } } : {} }} /></IconButton></span>
+              <span style={{ display: "contents" }}><IconButton aria-label="Refresh data" disabled={refreshing} sx={{ display: { xs: "none", sm: "inline-flex" } }} onClick={() => void refresh()}><RefreshRounded fontSize="small" sx={{ "@media (prefers-reduced-motion: no-preference)": refreshing ? { animation: "pfspin 1s linear infinite", "@keyframes pfspin": { to: { transform: "rotate(360deg)" } } } : {} }} /></IconButton></span>
             </Tooltip>
             <Chip size="small" label="Sandbox" variant="outlined" sx={{ display: { xs: "none", md: "inline-flex" } }} />
             <Button variant="contained" size="small" startIcon={<AddRounded />} onClick={() => setCreateOpen(true)} sx={{ display: { xs: "none", sm: "inline-flex" }, whiteSpace: "nowrap" }}>New payment</Button>
             <Tooltip title={resolved === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
-              <IconButton aria-label="Toggle colour mode" onClick={() => { const next = resolved === "dark" ? "light" : "dark"; setMode(next); notify.info("Theme updated", { description: `${next === "dark" ? "Dark" : "Light"} theme is on.`, category: "account" }); }}>{resolved === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}</IconButton>
+              <IconButton aria-label={resolved === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={toggleTheme} sx={{ display: { xs: "none", sm: "inline-flex" } }}>{resolved === "dark" ? <LightModeOutlined fontSize="small" /> : <DarkModeOutlined fontSize="small" />}</IconButton>
             </Tooltip>
             <NotificationCenter />
-            <IconButton aria-label="Account menu" onClick={(e) => setProfileEl(e.currentTarget)} sx={{ p: 0.5 }}><Avatar sx={{ width: 28, height: 28, bgcolor: "primary.dark", color: "#fff", fontSize: "0.6875rem", fontWeight: 500 }}>PF</Avatar></IconButton>
+            <IconButton aria-label="Account menu" aria-haspopup="menu" aria-expanded={!!profileEl} aria-controls={profileEl ? menuId : undefined} onClick={(e) => setProfileEl(e.currentTarget)} sx={{ p: 0.5 }}><Avatar sx={{ width: 28, height: 28, bgcolor: "primary.dark", color: "#fff", fontSize: "0.6875rem", fontWeight: 500 }}>PF</Avatar></IconButton>
           </Toolbar>
+          {searchOpen && (
+            <Box sx={{ display: { xs: "flex", sm: "none" }, gap: 0.5, px: 1, pb: 1 }}>
+              <TextField
+                autoFocus fullWidth size="small" type="search" placeholder="Search all payments…" value={query} onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { router.push("/payments"); setSearchOpen(false); } if (e.key === "Escape") setSearchOpen(false); }}
+                slotProps={{ htmlInput: { "aria-label": "Search all payments" }, input: { startAdornment: <InputAdornment position="start"><SearchRounded sx={{ fontSize: 18 }} /></InputAdornment> } }}
+                sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
+              />
+              <IconButton aria-label="Close search" onClick={() => setSearchOpen(false)}><CloseRounded /></IconButton>
+            </Box>
+          )}
         </AppBar>
 
-        <Menu anchorEl={profileEl} open={!!profileEl} onClose={() => setProfileEl(null)}>
+        <Menu id={menuId} anchorEl={profileEl} open={!!profileEl} onClose={() => setProfileEl(null)}>
           <Box sx={{ px: 2, py: 1 }}><Typography variant="subtitle2">Demo operator</Typography><Typography variant="body2" color="text.secondary">Acme Demo Store</Typography></Box>
           <Divider />
+          <MenuItem onClick={() => { setProfileEl(null); void refresh(); }} disabled={refreshing} sx={{ display: { sm: "none" } }}>Refresh data</MenuItem>
+          <MenuItem onClick={() => { setProfileEl(null); toggleTheme(); }} sx={{ display: { sm: "none" } }}>{resolved === "dark" ? "Switch to light mode" : "Switch to dark mode"}</MenuItem>
           <MenuItem component={Link} href="/settings" onClick={() => setProfileEl(null)}>Settings</MenuItem>
           <MenuItem component={Link} href="/developers" onClick={() => setProfileEl(null)}>API documentation</MenuItem>
         </Menu>
