@@ -174,7 +174,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <StatusIndicator tone={conn.tone} label={conn.label} />
               </Box>
             </Tooltip>
-            {pendingOps > 0 && <Chip size="small" color="warning" variant="outlined" label={`${pendingOps} pending`} sx={{ display: { xs: "none", md: "inline-flex" } }} />}
+            {pendingOps > 0 && <Chip size="small" color="warning" variant="outlined" label={`${pendingOps} pending`} sx={{ display: { xs: "none", md: "inline-flex" }, color: "warning.text", borderColor: "warning.text" }} />}
             <Tooltip title="Refresh now">
               <span><IconButton aria-label="Refresh data" disabled={refreshing} onClick={() => void refresh()}><RefreshRounded fontSize="small" sx={{ "@media (prefers-reduced-motion: no-preference)": refreshing ? { animation: "pfspin 1s linear infinite", "@keyframes pfspin": { to: { transform: "rotate(360deg)" } } } : {} }} /></IconButton></span>
             </Tooltip>

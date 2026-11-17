@@ -3,7 +3,7 @@ import InsightsOutlined from "@mui/icons-material/InsightsOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
-import { inRange, pctChange } from "../../lib/analytics";
+import { hourlyChartData, inRange, outcomeChartData, pctChange, refundChartData, statusChartData, volumeChartData } from "../../lib/analytics";
 import { dayPoints, statusRows, successRate } from "../../lib/summary";
 import { formatMoney } from "../../lib/api";
 import { useData } from "../../lib/data";
@@ -45,11 +45,11 @@ export default function AnalyticsPage() {
         <MetricCard loading={loading} label="Average captured ticket" value={t ? formatMoney(avg) : "—"} delta={delta(avg, avgPrev, "up")} />
       </Box>
       <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" } }}>
-        <Panel title="Payment volume" subtitle="Daily captured volume (GBP)" collapsible><ChartArea height={220} label="Daily captured volume">{none ? empty : <VolumeAreaChart data={series} />}</ChartArea></Panel>
-        <Panel title="Success vs decline" subtitle="Daily transaction outcomes (count)" collapsible><ChartArea height={220} label="Daily successful and declined payments">{none ? empty : <SuccessDeclineChart data={series} />}</ChartArea></Panel>
-        <Panel title="Refund trend" subtitle="Daily refunded amount (GBP)" collapsible><ChartArea height={220} label="Daily refunded amount">{none ? empty : <RefundChart data={series} />}</ChartArea></Panel>
-        <Panel title="Transactions by status" subtitle="Current status of payments in range" collapsible><ChartArea height={220} label="Payments by status">{none ? empty : <StatusPie data={statuses} />}</ChartArea></Panel>
-        <Box sx={{ gridColumn: { lg: "1 / -1" }, minWidth: 0 }}><Panel title="Activity by hour" subtitle="Latest 100 payments by hour of day (your local time)" collapsible><ChartArea height={200} label="Transactions by hour of day">{none ? empty : <HourlyChart data={hourly} />}</ChartArea></Panel></Box>
+        <Panel title="Payment volume" subtitle="Daily captured volume (GBP)" collapsible><ChartArea height={220} label="Daily captured volume" {...volumeChartData(series, formatMoney)}>{none ? empty : <VolumeAreaChart data={series} />}</ChartArea></Panel>
+        <Panel title="Success vs decline" subtitle="Daily transaction outcomes (count)" collapsible><ChartArea height={220} label="Daily successful and declined payments" {...outcomeChartData(series)}>{none ? empty : <SuccessDeclineChart data={series} />}</ChartArea></Panel>
+        <Panel title="Refund trend" subtitle="Daily refunded amount (GBP)" collapsible><ChartArea height={220} label="Daily refunded amount" {...refundChartData(series, formatMoney)}>{none ? empty : <RefundChart data={series} />}</ChartArea></Panel>
+        <Panel title="Transactions by status" subtitle="Current status of payments in range" collapsible><ChartArea height={220} label="Payments by status" {...statusChartData(statuses)}>{none ? empty : <StatusPie data={statuses} />}</ChartArea></Panel>
+        <Box sx={{ gridColumn: { lg: "1 / -1" }, minWidth: 0 }}><Panel title="Activity by hour" subtitle="Latest 100 payments by hour of day (your local time)" collapsible><ChartArea height={200} label="Transactions by hour of day" {...hourlyChartData(hourly)}>{none ? empty : <HourlyChart data={hourly} />}</ChartArea></Panel></Box>
       </Box>
       <Typography variant="meta" color="text.secondary" component="p" sx={{ mt: 1.5 }}>Figures are aggregated by the backend from all persisted payments and update live. Deltas compare with the {versus} when payments exist in it (not shown for “All”). The hourly chart uses the latest {payments.length} payments.</Typography>
     </>
