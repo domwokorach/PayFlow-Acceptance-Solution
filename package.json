@@ -40,7 +40,8 @@
     "eslint-config-next": "^16.4.6",
     "jsdom": "^31.0.1",
     "typescript": "^5.9.0",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "vitest-axe": "^0.1.0"
   },
   "description": "A modern, secure, and scalable payment acceptance dashboard for PayFlow, providing real-time transaction monitoring, merchant management, payment processing, analytics, reporting, and developer integrations.",
   "main": "index.js",
