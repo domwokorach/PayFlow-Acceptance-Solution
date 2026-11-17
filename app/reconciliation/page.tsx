@@ -3,6 +3,7 @@ import CheckCircleOutline from "@mui/icons-material/CheckCircleOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -54,7 +55,7 @@ export default function ReconciliationPage() {
       <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", xl: "1fr 1fr" } }}>
         <Panel title="Awaiting provider or review" subtitle={awaiting.length ? `${awaiting.length} to resolve` : undefined} flush>
           {isPending ? <LoadingState rows={3} /> : awaiting.length === 0 ? <EmptyState icon={<CheckCircleOutline />} title="Nothing outstanding" body="Every payment has a confirmed outcome." /> : (
-            <TableContainer><Table size="small" aria-label="Payments awaiting provider or review">
+            <TableContainer tabIndex={0} role="region" aria-label="Payments awaiting provider or review table"><Table size="small" aria-label="Payments awaiting provider or review">
               <TableHead><TableRow><TableCell scope="col">Payment</TableCell><TableCell scope="col">Status</TableCell><TableCell align="right" scope="col">Amount</TableCell><TableCell scope="col" sx={{ display: { xs: "none", md: "table-cell" } }}>Since</TableCell><TableCell align="right" scope="col">Action</TableCell></TableRow></TableHead>
               <TableBody>{awaiting.map((r) => (
                 <TableRow key={r.paymentId} hover sx={{ "&:last-child td": { border: 0 } }}>
@@ -75,11 +76,11 @@ export default function ReconciliationPage() {
         </Panel>
         <Panel title="Record discrepancies" subtitle={bad.length ? `${bad.length} to review` : undefined} flush>
           {isPending ? <LoadingState rows={3} /> : bad.length === 0 ? <EmptyState icon={<CheckCircleOutline />} title="No discrepancies" body="Statuses, refunds, provider operations and ledger entries agree." /> : (
-            <TableContainer><Table size="small" aria-label="Record discrepancies">
+            <TableContainer tabIndex={0} role="region" aria-label="Record discrepancies table"><Table size="small" aria-label="Record discrepancies">
               <TableHead><TableRow><TableCell scope="col">Issue</TableCell><TableCell scope="col">Payment</TableCell></TableRow></TableHead>
               <TableBody>{bad.map((d, i) => (
-                <TableRow key={`${d.paymentId}-${i}`} hover tabIndex={0} onClick={() => select(d.paymentId)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(d.paymentId); } }} sx={{ cursor: "pointer", "&:last-child td": { border: 0 } }}>
-                  <TableCell sx={{ color: "error.text" }}>{d.issue}</TableCell><TableCell sx={{ typography: "code" }}>{d.paymentId.slice(0, 8)}…</TableCell>
+                <TableRow key={`${d.paymentId}-${i}`} hover onClick={() => select(d.paymentId)} sx={{ cursor: "pointer", "&:last-child td": { border: 0 } }}>
+                  <TableCell sx={{ color: "error.text" }}>{d.issue}</TableCell><TableCell><ButtonBase onClick={(e) => { e.stopPropagation(); select(d.paymentId); }} sx={{ typography: "code", borderRadius: 0.5 }}>{d.paymentId.slice(0, 8)}…</ButtonBase></TableCell>
                 </TableRow>
               ))}</TableBody>
             </Table></TableContainer>

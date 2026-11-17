@@ -3,6 +3,7 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import StorefrontOutlined from "@mui/icons-material/StorefrontOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -27,9 +28,10 @@ import { MetricCard } from "../../components/ui/MetricCard";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Panel } from "../../components/ui/Panel";
 import { StatusIndicator } from "../../components/ui/StatusIndicator";
+import { VisuallyHidden } from "../../components/ui/VisuallyHidden";
 
 const DAY = 86_400_000;
-const visuallyHidden = { position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap" } as const;
+
 
 export default function MerchantsPage() {
   const { payments, merchants: profiles, merchantsLoading, loading } = useData();
@@ -53,17 +55,16 @@ export default function MerchantsPage() {
       ) : (
         <>
           <Panel title="Merchant accounts" subtitle={`${merchants.length} ${merchants.length === 1 ? "merchant" : "merchants"}`} flush sx={{ mb: 1.5 }}>
-            <TableContainer>
+            <TableContainer tabIndex={0} role="region" aria-label="Merchants table">
               <Table size="small" aria-label="Merchants" sx={{ minWidth: 560 }}>
                 <TableHead><TableRow>
                   <TableCell scope="col">Merchant</TableCell><TableCell scope="col">Status</TableCell>
-                  <TableCell align="right" scope="col">Transactions</TableCell><TableCell align="right" scope="col">Captured</TableCell><TableCell align="right" scope="col">Success</TableCell><TableCell scope="col">Last activity</TableCell><TableCell align="right" scope="col" sx={{ width: 48 }}><Box component="span" sx={visuallyHidden}>Actions</Box></TableCell>
+                  <TableCell align="right" scope="col">Transactions</TableCell><TableCell align="right" scope="col">Captured</TableCell><TableCell align="right" scope="col">Success</TableCell><TableCell scope="col">Last activity</TableCell><TableCell align="right" scope="col" sx={{ width: 48 }}><VisuallyHidden>Actions</VisuallyHidden></TableCell>
                 </TableRow></TableHead>
                 <TableBody>
                   {merchants.map((m) => (
-                    <TableRow key={m.id} hover selected={selected?.id === m.id} tabIndex={0} aria-selected={selected?.id === m.id} onClick={() => setOpen(m.id)}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(m.id); } }} sx={{ cursor: "pointer", "&:last-child td": { border: 0 } }}>
-                      <TableCell><Typography variant="h4" component="span">{m.profile.displayName}</Typography><Typography variant="code" color="text.secondary" component="p">{m.id.slice(0, 8)}…</Typography></TableCell>
+                    <TableRow key={m.id} hover selected={selected?.id === m.id} onClick={() => setOpen(m.id)} sx={{ cursor: "pointer", "&:last-child td": { border: 0 } }}>
+                      <TableCell><ButtonBase onClick={(e) => { e.stopPropagation(); setOpen(m.id); }} sx={{ display: "block", textAlign: "left", borderRadius: 0.5 }}><Typography variant="h4" component="span">{m.profile.displayName}</Typography>{selected?.id === m.id && <VisuallyHidden>, selected</VisuallyHidden>}</ButtonBase><Typography variant="code" color="text.secondary" component="p">{m.id.slice(0, 8)}…</Typography></TableCell>
                       <TableCell><StatusIndicator tone={m.active ? "success" : "neutral"} label={m.active ? "Active" : "Dormant"} /></TableCell>
                       <TableCell align="right">{m.k.total}</TableCell>
                       <TableCell align="right">{formatMoney(m.k.capturedMinor)}</TableCell>

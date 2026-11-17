@@ -2,7 +2,6 @@
 import CheckRounded from "@mui/icons-material/CheckRounded";
 import KeyboardReturnRounded from "@mui/icons-material/KeyboardReturnRounded";
 import ReceiptLongOutlined from "@mui/icons-material/ReceiptLongOutlined";
-import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
@@ -18,14 +17,15 @@ import TableSortLabel from "@mui/material/TableSortLabel";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { keyframes } from "@mui/material/styles";
-import { useEffect, useMemo, useState } from "react";
-import { canCapture, canRefund, providerLabel } from "../../lib/analytics";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { canCapture, canRefund, providerLabel, statusLabels } from "../../lib/analytics";
 import { formatDate, formatMoney } from "../../lib/api";
 import { useData } from "../../lib/data";
 import type { Payment } from "../../lib/types";
 import { EmptyState } from "../ui/EmptyState";
 import { LoadingState } from "../ui/LoadingState";
 import { StatusChip } from "../ui/StatusChip";
+import { VisuallyHidden } from "../ui/VisuallyHidden";
 import { RefundDialog } from "./RefundDialog";
 
 type SortKey = "createdAt" | "amountMinor" | "status" | "provider";
@@ -42,6 +42,8 @@ export function PaymentsTable({ rows, pageSize = 10, compact }: { rows: Payment[
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(pageSize);
   const [refundFor, setRefundFor] = useState<Payment | null>(null);
+  // Each row's one control, so focus can return to it when an inline action removes the button that had it.
+  const rowButtons = useRef(new Map<string, HTMLButtonElement>());
   useEffect(() => { setPage(0); }, [rows.length]);
 
   const sorted = useMemo(() => [...rows].sort((a, b) => {
@@ -64,9 +66,9 @@ export function PaymentsTable({ rows, pageSize = 10, compact }: { rows: Payment[
       <Stack component="ul" aria-label="Payments" sx={{ display: { xs: "flex", sm: "none" }, listStyle: "none", m: 0, p: 1.5, gap: 1 }}>
         {view.map((p) => (
           <li key={p.id}>
-            <ButtonBase onClick={() => select(p.id)} aria-label={`View payment ${p.id}`} sx={{ display: "block", width: "100%", textAlign: "left", p: 1.5, minHeight: 64, border: 1, borderColor: p.id === selectedId ? "primary.main" : "divider", borderRadius: 1, bgcolor: "background.paper", ...flashSx(changed.has(p.id)) }}>
+            <ButtonBase onClick={() => select(p.id)} sx={{ display: "block", width: "100%", textAlign: "left", p: 1.5, minHeight: 64, border: 1, borderColor: p.id === selectedId ? "primary.main" : "divider", borderRadius: 1, bgcolor: "background.paper", ...flashSx(changed.has(p.id)) }}>
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1 }}>
-                <Typography variant="subtitle1" sx={{ fontVariantNumeric: "tabular-nums" }}>{formatMoney(p.amountMinor, p.currency)}</Typography>
+                <Typography variant="subtitle1" component="p" sx={{ fontVariantNumeric: "tabular-nums" }}>{formatMoney(p.amountMinor, p.currency)}</Typography>
                 <StatusChip status={p.status} />
               </Box>
               <Typography variant="meta" color="text.secondary" component="p" sx={{ mt: 0.5 }}>{formatDate(p.createdAt)} · {providerLabel(p.provider)}</Typography>
@@ -75,7 +77,7 @@ export function PaymentsTable({ rows, pageSize = 10, compact }: { rows: Payment[
           </li>
         ))}
       </Stack>
-      <TableContainer sx={{ display: { xs: "none", sm: "block" } }}>
+      <TableContainer tabIndex={0} role="region" aria-label="Payments table" sx={{ display: { xs: "none", sm: "block" } }}>
         <Table size="small" aria-label="Payments" sx={{ minWidth: 640 }}>
           <TableHead>
             <TableRow>
@@ -91,10 +93,14 @@ export function PaymentsTable({ rows, pageSize = 10, compact }: { rows: Payment[
           </TableHead>
           <TableBody>
             {view.map((p) => (
-              <TableRow key={p.id} hover selected={p.id === selectedId} tabIndex={0} aria-selected={p.id === selectedId} onClick={() => select(p.id)}
-                onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(p.id); } }}
+              <TableRow key={p.id} hover selected={p.id === selectedId} onClick={() => select(p.id)}
                 sx={{ cursor: "pointer", "&:last-child td": { border: 0 }, ...flashSx(changed.has(p.id)) }}>
-                <TableCell sx={{ typography: "code" }}>{p.id.slice(0, 8)}…</TableCell>
+                <TableCell>
+                  {/* The row click is a mouse shortcut; this is the keyboard and screen reader control, named with what the row shows. */}
+                  <ButtonBase ref={(el: HTMLButtonElement | null) => { if (el) rowButtons.current.set(p.id, el); else rowButtons.current.delete(p.id); }} onClick={(e) => { e.stopPropagation(); select(p.id); }} sx={{ typography: "code", borderRadius: 0.5 }}>
+                    {p.id.slice(0, 8)}…<VisuallyHidden>, {formatMoney(p.amountMinor, p.currency)}, {statusLabels[p.status]}{p.id === selectedId ? ", selected" : ""}</VisuallyHidden>
+                  </ButtonBase>
+                </TableCell>
                 <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDate(p.createdAt)}</TableCell>
                 <TableCell sx={{ ...hideBelowLg, typography: "code" }}>{p.merchantId.slice(0, 8)}…</TableCell>
                 <TableCell sx={hideBelowLg}>{providerLabel(p.provider)}</TableCell>
@@ -102,9 +108,8 @@ export function PaymentsTable({ rows, pageSize = 10, compact }: { rows: Payment[
                 <TableCell align="right" sx={{ fontWeight: 500 }}>{formatMoney(p.amountMinor, p.currency)}</TableCell>
                 <TableCell align="right" sx={{ ...hideBelowLg, color: p.refundedAmountMinor ? "text.primary" : "text.secondary" }}>{p.refundedAmountMinor ? formatMoney(p.refundedAmountMinor, p.currency) : "—"}</TableCell>
                 <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                  {canCapture(p) && <Tooltip title="Capture full amount"><span><IconButton size="small" disabled={busy} aria-label={`Capture payment ${p.id}`} onClick={(e) => { e.stopPropagation(); void capture(p.id); }}><CheckRounded fontSize="small" /></IconButton></span></Tooltip>}
+                  {canCapture(p) && <Tooltip title="Capture full amount" describeChild><span><IconButton size="small" disabled={busy} aria-label={`Capture payment ${p.id}`} onClick={(e) => { e.stopPropagation(); void capture(p.id).then(() => rowButtons.current.get(p.id)?.focus()); }}><CheckRounded fontSize="small" /></IconButton></span></Tooltip>}
                   {canRefund(p) && <Tooltip title="Refund"><IconButton size="small" aria-label={`Refund payment ${p.id}`} onClick={(e) => { e.stopPropagation(); setRefundFor(p); }}><KeyboardReturnRounded fontSize="small" /></IconButton></Tooltip>}
-                  <Tooltip title="View details"><IconButton size="small" aria-label={`View payment ${p.id}`} onClick={(e) => { e.stopPropagation(); select(p.id); }}><VisibilityOutlined fontSize="small" /></IconButton></Tooltip>
                 </TableCell>
               </TableRow>
             ))}

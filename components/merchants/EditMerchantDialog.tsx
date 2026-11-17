@@ -15,6 +15,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useData } from "../../lib/data";
 import { changedFields, toForm, validateMerchant, type MerchantForm, type MerchantFormErrors } from "../../lib/merchants";
 import type { Merchant } from "../../lib/types";
+import { ModalLiveRegions } from "../notifications/LiveRegions";
 
 /** Edits the display name, contact email and business name. The form is prefilled from the saved merchant and keeps the user's input if saving fails. */
 export function EditMerchantDialog({ merchant, open, onClose }: { merchant: Merchant; open: boolean; onClose: () => void }) {
@@ -48,6 +49,7 @@ export function EditMerchantDialog({ merchant, open, onClose }: { merchant: Merc
     <Dialog open={open} onClose={close} fullScreen={fullScreen} fullWidth maxWidth="xs" aria-labelledby="edit-merchant-title"
       slotProps={{ transition: { onExited: reset } }}>
       <form onSubmit={(e) => void submit(e)} noValidate style={{ display: "contents" }}>
+        <ModalLiveRegions />
         <DialogTitle id="edit-merchant-title">Edit merchant</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>Update how this merchant appears in PayFlow. Merchant ID and API credentials cannot be changed here.</DialogContentText>

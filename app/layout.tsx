@@ -6,7 +6,7 @@ import { Providers } from "../components/Providers";
 import { AppShell } from "../components/shell/AppShell";
 
 export const metadata: Metadata = {
-  title: "PayFlow | Payment Operations",
+  title: { template: "%s · PayFlow", default: "Overview · PayFlow" }, // each route sets its own title in its layout.tsx
   description: "Simulated fintech processing dashboard — engineering portfolio",
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };

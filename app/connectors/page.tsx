@@ -22,6 +22,7 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Panel } from "../../components/ui/Panel";
 import { StatusIndicator } from "../../components/ui/StatusIndicator";
+import { ModalLiveRegions } from "../../components/notifications/LiveRegions";
 
 const DESCRIPTIONS: Record<string, string> = { SIMULATED: "Local authorization simulator, no network calls", VISA_SANDBOX: "Visa Acceptance sandbox, called from the backend with test data" };
 
@@ -52,6 +53,7 @@ export default function ConnectorsPage() {
       <Typography variant="meta" color="text.secondary" component="p" sx={{ mt: 1.5 }}>Health is derived from persisted provider operations: unknown outcomes in the last 24 hours or operations waiting over 15 minutes mark a provider as degraded.{lastSync ? ` Last synced ${new Date(lastSync).toLocaleTimeString("en-GB")}.` : ""}</Typography>
 
       <Dialog open={!!config} onClose={() => setConfig(null)} fullWidth maxWidth="sm" aria-labelledby="cfg-title">
+        <ModalLiveRegions />
         <DialogTitle id="cfg-title">{config ? providerLabel(config) : ""} configuration</DialogTitle>
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>Provider settings live in server environment variables. Credentials are never sent to or shown in the browser.</Alert>

@@ -6,6 +6,7 @@ import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { ModalLiveRegions } from "../notifications/LiveRegions";
 
 /** Right-hand detail drawer: full-width on phones, 420px otherwise. Header shows eyebrow, title and an optional status slot. */
 export function DetailDrawer({ open, onClose, ariaLabel, eyebrow, title, status, children }: {
@@ -13,6 +14,7 @@ export function DetailDrawer({ open, onClose, ariaLabel, eyebrow, title, status,
 }) {
   return (
     <Drawer anchor="right" open={open} onClose={onClose} slotProps={{ paper: { sx: { width: { xs: "100vw", sm: 420 }, maxWidth: "100vw" }, role: "dialog", "aria-label": ariaLabel } }}>
+      <ModalLiveRegions />
       <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="overline" color="text.secondary">{eyebrow}</Typography>
