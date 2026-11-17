@@ -41,7 +41,7 @@ export default function PaymentsPage() {
       <ApiError />
       <Panel title="Transactions" subtitle={`${rows.length.toLocaleString("en-GB")} shown`} flush>
         <FilterToolbar>
-          <SearchField value={query} onChange={setQuery} placeholder="Search by ID, status, provider…" label="Search payments" />
+          <SearchField value={query} onChange={setQuery} placeholder="Search by ID, status, provider…" label="Filter transactions" />
           <TextField select size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 170 }} slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}>
             <MenuItem value="">All statuses</MenuItem>
             {Object.entries(statusLabels).map(([k, l]) => <MenuItem key={k} value={k}>{l}</MenuItem>)}
