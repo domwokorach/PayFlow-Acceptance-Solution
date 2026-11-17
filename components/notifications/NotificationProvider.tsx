@@ -3,8 +3,9 @@ import Box from "@mui/material/Box";
 import Snackbar, { type SnackbarCloseReason } from "@mui/material/Snackbar";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode, type SyntheticEvent } from "react";
-import type { NotificationApi, NotificationRecord, NotifyFn, NotifyInput, NotifyOptions, QueuedNotification } from "../../lib/notifications/notification-types";
+import type { Announcement, NotificationApi, NotificationRecord, NotifyFn, NotifyInput, NotifyOptions, QueuedNotification } from "../../lib/notifications/notification-types";
 import { durationOf, ENTER_MS, EXIT_MS, NotificationQueue } from "../../lib/notifications/notification-utils";
+import { LiveRegions } from "./LiveRegions";
 import { NotificationToast, TopTransition } from "./NotificationToast";
 
 export type { NotifyInput } from "../../lib/notifications/notification-types";
@@ -17,7 +18,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [queue] = useState(() => new NotificationQueue()); // one mutable queue for the provider's lifetime
   const [current, setCurrent] = useState<QueuedNotification | null>(null);
   const [open, setOpen] = useState(false);
-  const [announce, setAnnounce] = useState<{ id: number; polite: boolean; text: string } | null>(null);
+  const [announce, setAnnounce] = useState<Announcement | null>(null);
+  const [modals, setModals] = useState(0);
   const [history, setHistory] = useState<NotificationRecord[]>([]);
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
 
@@ -60,8 +62,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const clearHistory = useCallback(() => setHistory([]), []);
   const unreadCount = useMemo(() => history.reduce((n, r) => n + (r.read ? 0 : 1), 0), [history]);
 
-  const api = useMemo<NotificationApi>(() => ({ notify, dismiss, dismissAll, history, unreadCount, markRead, markAllRead, clearHistory }),
-    [notify, dismiss, dismissAll, history, unreadCount, markRead, markAllRead, clearHistory]);
+  const registerModal = useCallback(() => { setModals((n) => n + 1); return () => setModals((n) => n - 1); }, []);
+
+  const api = useMemo<NotificationApi>(() => ({ notify, announcement: announce, registerModal, dismiss, dismissAll, history, unreadCount, markRead, markAllRead, clearHistory }),
+    [notify, announce, registerModal, dismiss, dismissAll, history, unreadCount, markRead, markAllRead, clearHistory]);
 
   const onClose = (_: Event | SyntheticEvent | null, reason: SnackbarCloseReason) => {
     // Clickaway would dismiss financial messages by accident; document-wide Escape is handled on the toast itself.
@@ -73,11 +77,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   return (
     <NotificationContext.Provider value={api}>
       {children}
-      {/* Persistent live regions: present before content changes so announcements are reliable and spoken exactly once. */}
-      <Box sx={visuallyHidden}>
-        <div role="status" aria-live="polite" aria-atomic="true" data-testid="live-polite">{announce?.polite && <span key={announce.id}>{announce.text}</span>}</div>
-        <div role="alert" aria-live="assertive" aria-atomic="true" data-testid="live-assertive">{announce && !announce.polite && <span key={announce.id}>{announce.text}</span>}</div>
-      </Box>
+      {/* Modals aria-hide this copy, so they mount their own (ModalLiveRegions); stay silent while one is open to avoid double speech. */}
+      <LiveRegions announce={modals === 0 ? announce : null} />
       {current && (
         <Snackbar
           key={current.id}
@@ -99,11 +100,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             "@media (max-width:599.95px)": { maxWidth: "none", left: "calc(env(safe-area-inset-left, 0px) + 12px)", right: "calc(env(safe-area-inset-right, 0px) + 12px)", width: "auto", transform: "none" },
           })}
         >
-          <Box sx={{ width: "100%" }}><NotificationToast type={current.type} title={current.title} description={current.description} action={current.action} onClose={() => close(current.id)} /></Box>
+          <Box sx={{ width: "100%" }}><NotificationToast type={current.type} title={current.title} description={current.description} action={modals === 0 ? current.action : undefined} onClose={() => close(current.id)} /></Box>
         </Snackbar>
       )}
     </NotificationContext.Provider>
   );
 }
 
-const visuallyHidden = { position: "absolute", width: 1, height: 1, p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;

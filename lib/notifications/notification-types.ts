@@ -30,8 +30,15 @@ export interface NotifyFn {
   success: Shorthand; error: Shorthand; warning: Shorthand; info: Shorthand;
 }
 
+/** What the live regions speak: assertive for errors and warnings, polite otherwise. */
+export interface Announcement { id: number; polite: boolean; text: string }
+
 export interface NotificationApi {
   notify: NotifyFn;
+  /** The message currently being announced, for live regions rendered inside modals. */
+  announcement: Announcement | null;
+  /** Call from a mounted modal; returns the cleanup. While any modal is registered the provider's own regions stay silent. */
+  registerModal: () => () => void;
   dismiss: (id?: number) => void;
   dismissAll: () => void;
   history: readonly NotificationRecord[];

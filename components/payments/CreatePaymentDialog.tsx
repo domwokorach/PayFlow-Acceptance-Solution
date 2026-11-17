@@ -13,9 +13,10 @@ import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { parseMoney } from "../../lib/analytics";
 import { useData } from "../../lib/data";
+import { ModalLiveRegions } from "../notifications/LiveRegions";
 
 const MAX_MINOR = 100_000_000; // £1,000,000, matching the original demo limit
 
@@ -26,12 +27,13 @@ export function CreatePaymentDialog() {
   const [decline, setDecline] = useState(false);
   const [provider, setProvider] = useState("SIMULATED");
   const [error, setError] = useState("");
+  const amountRef = useRef<HTMLInputElement>(null);
 
   const [failure, setFailure] = useState("");
   const close = () => { if (!busy) { setCreateOpen(false); setError(""); setFailure(""); } };
   const submit = async () => {
     const parsed = parseMoney(amount, MAX_MINOR);
-    if ("error" in parsed) { setError(parsed.error); return; }
+    if ("error" in parsed) { setError(parsed.error); amountRef.current?.focus(); return; }
     setFailure("");
     const r = await create(parsed.minor, provider === "SIMULATED" && decline, provider);
     if (r.ok) { setCreateOpen(false); setError(""); setDecline(false); } else setFailure(r.error); // stays on screen after the toast is gone
@@ -39,10 +41,11 @@ export function CreatePaymentDialog() {
 
   return (
     <Dialog open={createOpen} onClose={close} fullScreen={fullScreen} fullWidth maxWidth="xs" aria-labelledby="create-title">
+      <ModalLiveRegions />
       <DialogTitle id="create-title">Create payment</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>Creates a GBP authorization. Capture and refund it from the payment details.</DialogContentText>
-        <TextField autoFocus fullWidth label="Amount" value={amount} onChange={(e) => { setAmount(e.target.value); setError(""); }} error={!!error} helperText={error || "Up to £1,000,000.00"}
+        <TextField autoFocus fullWidth inputRef={amountRef} label="Amount" value={amount} onChange={(e) => { setAmount(e.target.value); setError(""); }} error={!!error} helperText={error || "Up to £1,000,000.00"}
           onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
           slotProps={{ htmlInput: { inputMode: "decimal" }, input: { startAdornment: <InputAdornment position="start">£</InputAdornment> } }} />
         <TextField select fullWidth sx={{ mt: 2 }} label="Provider" value={provider} onChange={(e) => setProvider(e.target.value)}

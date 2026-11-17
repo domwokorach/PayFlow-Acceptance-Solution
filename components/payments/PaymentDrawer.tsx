@@ -7,7 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { canRefund, providerLabel, refundableMinor } from "../../lib/analytics";
 import { formatDate, formatMoney } from "../../lib/api";
 import { useNotification } from "../../hooks/useNotification";
@@ -21,7 +21,8 @@ import { RefundDialog } from "./RefundDialog";
 
 const NO_REFUND_BALANCE = ["DECLINED", "AUTHORIZED", "PENDING_AUTHORIZATION", "CAPTURE_PENDING", "REVIEW_REQUIRED"];
 
-function Body({ p }: { p: Payment }) {
+/** `statusRef` is the status chip: where focus goes once an action removes the button that had it. */
+function Body({ p, statusRef }: { p: Payment; statusRef: RefObject<HTMLElement | null> }) {
   const { capture, reconcile, busy, opErrors, dismissOpError } = useData();
   const { notify } = useNotification();
   // Failures stay here after the toast is gone: the last failed operation (until a later attempt succeeds), plus
@@ -47,19 +48,19 @@ function Body({ p }: { p: Payment }) {
         {opError && <Alert severity="error" role="alert" onClose={() => dismissOpError(p.id)}><Typography variant="subtitle2" component="p">{opError.title}</Typography>{opError.message}</Alert>}
         {providerNote && <Alert severity="error"><Typography variant="subtitle2" component="p">{providerNote.title}</Typography>{providerNote.description}</Alert>}
         {p.status === "AUTHORIZED" && <>
-          <Typography variant="h4">Capture payment</Typography>
+          <Typography variant="h4" component="h3">Capture payment</Typography>
           <Typography variant="body2" color="text.secondary">Captures the full authorized amount and records balanced ledger entries.</Typography>
-          <Button variant="contained" size="large" disabled={busy} onClick={() => void capture(p.id)}>{busy ? "Processing…" : "Capture full amount"}</Button>
+          <Button variant="contained" size="large" aria-disabled={busy} sx={{ "&[aria-disabled=true]": { opacity: 0.6, cursor: "default" } }} onClick={() => { if (!busy) void capture(p.id).then(() => statusRef.current?.focus()); }}>{busy ? "Processing…" : "Capture full amount"}</Button>
         </>}
         {canRefund(p) && <>
-          <Typography variant="h4">Refund</Typography>
+          <Typography variant="h4" component="h3">Refund</Typography>
           <Typography variant="body2" color="text.secondary">Up to {formatMoney(remaining, p.currency)} can still be refunded.</Typography>
           <Button variant="contained" size="large" onClick={() => setRefundOpen(true)}>Issue refund…</Button>
           <RefundDialog payment={p} open={refundOpen} onClose={() => setRefundOpen(false)} />
         </>}
         {(p.status === "CAPTURE_PENDING" || p.status === "REFUND_PENDING") && <>
           <Alert severity="warning">The provider accepted the request but has not confirmed settlement. Do not resend it.</Alert>
-          <Button variant="contained" size="large" disabled={busy} onClick={() => void reconcile(p.id)}>{busy ? "Checking…" : "Check provider status"}</Button>
+          <Button variant="contained" size="large" aria-disabled={busy} sx={{ "&[aria-disabled=true]": { opacity: 0.6, cursor: "default" } }} onClick={() => { if (!busy) void reconcile(p.id).then(() => statusRef.current?.focus()); }}>{busy ? "Checking…" : "Check provider status"}</Button>
         </>}
         {p.status === "REVIEW_REQUIRED" && <Alert severity="error">The outcome is unknown: the request may have reached Visa. Check merchant transaction management using this payment ID before doing anything else. Do not resubmit.</Alert>}
         {p.status === "PENDING_AUTHORIZATION" && <Alert severity="info">Authorization is in progress.</Alert>}
@@ -74,10 +75,11 @@ function Body({ p }: { p: Payment }) {
 export function PaymentDrawer() {
   const { payments, selectedId, select } = useData();
   const payment = payments.find((p) => p.id === selectedId) ?? null;
+  const statusRef = useRef<HTMLElement>(null);
   return (
     <DetailDrawer open={!!payment} onClose={() => select(null)} ariaLabel="Payment details" eyebrow="Transaction details"
-      title={payment ? formatMoney(payment.amountMinor, payment.currency) : ""} status={payment ? <StatusChip status={payment.status} size="medium" /> : null}>
-      {payment ? <Body key={payment.id} p={payment} /> : null}
+      title={payment ? formatMoney(payment.amountMinor, payment.currency) : ""} status={payment ? <Box ref={statusRef} tabIndex={-1} sx={{ display: "inline-block", borderRadius: 1 }}><StatusChip status={payment.status} size="medium" /></Box> : null}>
+      {payment ? <Body key={payment.id} p={payment} statusRef={statusRef} /> : null}
     </DetailDrawer>
   );
 }

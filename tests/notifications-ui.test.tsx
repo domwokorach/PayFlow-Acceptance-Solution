@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 import { useEffect } from "react";
+import Dialog from "@mui/material/Dialog";
 import { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider } from "@mui/material/styles";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificationCenter } from "../components/notifications/NotificationCenter";
+import { ModalLiveRegions } from "../components/notifications/LiveRegions";
 import { NotificationProvider } from "../components/notifications/NotificationProvider";
 import { useNotification } from "../hooks/useNotification";
 import { ApiRequestError } from "../lib/api";
@@ -288,5 +290,23 @@ describe("notification centre", () => {
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "View payment" }));
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(api.unreadCount).toBe(0);
+  });
+});
+
+describe("announcements while a modal is open", () => {
+  it("speaks from a live region inside the dialog, and keeps the aria-hidden body copy quiet", () => {
+    mount(<Dialog open><ModalLiveRegions /></Dialog>);
+    run(() => { api.notify.success("Payment captured", { description: "£147.50 capture confirmed" }); });
+    const regions = screen.getAllByTestId("live-polite");
+    const audible = regions.filter((el) => !el.closest("[aria-hidden='true']"));
+    expect(audible).toHaveLength(1);
+    expect(audible[0].textContent).toContain("Payment captured");
+    expect(regions.filter((el) => el.closest("[aria-hidden='true']")).every((el) => el.textContent === "")).toBe(true);
+  });
+
+  it("hides toast actions that the modal's focus trap would make unreachable", () => {
+    mount(<Dialog open><ModalLiveRegions /></Dialog>);
+    run(() => { api.notify.success("Payment captured", { action: { label: "View payment", onClick: () => undefined } }); });
+    expect(screen.queryByRole("button", { name: "View payment", hidden: true })).toBeNull();
   });
 });
