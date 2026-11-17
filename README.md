@@ -36,25 +36,25 @@ PayFlow is a payment acceptance and operations platform: a Spring Boot REST API,
 - **Live updates and notifications:** SSE-driven live status, notification centre, light/dark theme.
 - **Sandbox:** clear sandbox labelling throughout; no real funds move.
 
-## Application screenshots
+## Application Screenshots
 
-### Payments dashboard
+### Payments Dashboard
 
 Monitor transactions, payment statuses, authorizations, captures, and refunds.
 
-![PayFlow Payments Dashboard](docs/images/payments.png)
+![Payments Dashboard](docs/images/payments.png)
 
-### Developer API integration
+### Developers Dashboard
 
-Explore REST API endpoints, integration examples, requests, and responses.
+View REST API endpoints, request/response examples, sandbox integration notes, and developer tools.
 
-![PayFlow Developer Portal](docs/images/developers.png)
+![Developers Dashboard](docs/images/developers.png)
 
-### Merchant management
+### Merchants Dashboard
 
-Manage merchant accounts, payment activity, transaction statistics, and merchant profiles.
+Manage merchant accounts, merchant profiles, payment activity, and transaction statistics.
 
-![PayFlow Merchant Management](docs/images/merchants.png)
+![Merchants Dashboard](docs/images/merchants.png)
 
 ## Quick start
 
