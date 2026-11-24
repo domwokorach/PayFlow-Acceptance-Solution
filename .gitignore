@@ -17,3 +17,8 @@ reports/
 frontend/reports/
 infrastructure/jenkins/local-repo/
 frontend/coverage/
+.vercel/
+.env.local
+.env.*.local
+*.pem
+*.p12

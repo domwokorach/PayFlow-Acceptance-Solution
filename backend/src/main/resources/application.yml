@@ -2,7 +2,7 @@ spring:
   application:
     name: payflow-api
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/payflow}
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payflow}}
     username: ${DB_USER:payflow}
     password: ${DB_PASSWORD:payflow_local}
   flyway:
@@ -11,7 +11,9 @@ spring:
     init:
       mode: never
 server:
-  port: 8080
+  port: ${PORT:8080}
+  shutdown: graceful
+  forward-headers-strategy: native
 payflow:
   seed-demo-data: ${PAYFLOW_SEED_DEMO_DATA:false}
   reconciler:
@@ -19,6 +21,8 @@ payflow:
     interval-ms: ${PAYFLOW_RECONCILER_INTERVAL_MS:30000}
   demo-api-key: ${PAYFLOW_DEMO_API_KEY:local-only-change-me}
   bootstrap-keys: ${PAYFLOW_BOOTSTRAP_KEYS:}
+  # true on any internet-reachable deployment: refuses the well-known local key and keys under 32 characters
+  require-strong-keys: ${PAYFLOW_REQUIRE_STRONG_KEYS:false}
   visa:
     enabled: ${PAYFLOW_VISA_ENABLED:false}
     merchant-id: ${PAYFLOW_VISA_MERCHANT_ID:}
@@ -39,4 +43,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: ${PAYFLOW_ACTUATOR_EXPOSURE:health,info,prometheus}
+  endpoint:
+    health:
+      show-details: never

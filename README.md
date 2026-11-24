@@ -12,7 +12,7 @@
 
 PayFlow is a payment acceptance and operations platform: a Spring Boot REST API, a PostgreSQL-backed double-entry-style financial journal, and a responsive Next.js merchant dashboard. It covers payment authorization, capture, partial and full refunds, merchant profiles, payment providers, transaction analytics, reconciliation, and database-backed idempotency.
 
-**This is a local development and sandbox project.** Payments, providers and ledger amounts are simulated. It is not production-ready, has not been certified for live payments, does not process real money, and is not affiliated with Visa or any card network. See [SECURITY.md](SECURITY.md).
+**This is a local development and sandbox project.** Payments, providers and ledger amounts are simulated. It is not production-ready, has not been certified for live payments, does not process real money, and is not affiliated with Visa or any card network. See [SECURITY.md](SECURITY.md). To host the dashboard on Vercel and the API on a container host, see [docs/deployment.md](docs/deployment.md).
 
 ## Technology stack
 
@@ -264,7 +264,9 @@ Run backend tests with `cd backend && mvn test`; run frontend type checking with
 
 ## Security warning
 
-**Do not deploy this milestone publicly.** The well-known default demo key, API proxy without real user sessions (anyone who can reach the dashboard acts as the demo merchant), development database password, and seed data are intentionally for **localhost only**. Implement user login with OAuth2/OIDC, RBAC, secret management, CSRF/origin and rate-limit defenses, audit logging, and an external threat review before any public demo. Never store actual card details, PAN or CVV.
+**Local mode (default, `docker compose up`) is for localhost only:** it uses the well-known demo key, a development database password and no dashboard login.
+
+**A public deployment is supported only as a single-operator sandbox** and only with the hardening in [`docs/deployment.md`](docs/deployment.md): HTTPS API origin, strong server-held API key, dashboard login with signed HttpOnly sessions, a route allowlist, same-origin checks on mutations, request limits, fail-closed environment validation, request timeouts, sanitised logs, no public metrics, and Visa credentials only on the backend. Still missing for anything beyond that: per-user OIDC accounts and RBAC, multiple merchant logins, sign-in audit logging, network restriction of the API, and an external threat review. Never store actual card details, PAN or CVV.
 
 ## Interview discussion prompts
 

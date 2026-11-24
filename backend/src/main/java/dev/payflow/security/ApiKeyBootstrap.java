@@ -21,8 +21,20 @@ public class ApiKeyBootstrap {
     private static final Logger log = LoggerFactory.getLogger(ApiKeyBootstrap.class);
     static final int MIN_KEY_LENGTH = 16;
 
+    static final int STRICT_MIN_KEY_LENGTH = 32;
+    static final String LOCAL_DEFAULT_KEY = "local-only-change-me";
+
+    /** Messages never include the key. Strict mode is for internet-reachable deployments. */
+    static void checkKey(String key, boolean strict) {
+        if (key.length() < MIN_KEY_LENGTH) throw new IllegalArgumentException("API keys must be at least " + MIN_KEY_LENGTH + " characters");
+        if (!strict) return;
+        if (LOCAL_DEFAULT_KEY.equals(key)) throw new IllegalArgumentException("The well-known local API key is not allowed when PAYFLOW_REQUIRE_STRONG_KEYS=true");
+        if (key.length() < STRICT_MIN_KEY_LENGTH) throw new IllegalArgumentException("API keys must be at least " + STRICT_MIN_KEY_LENGTH + " characters when PAYFLOW_REQUIRE_STRONG_KEYS=true");
+    }
+
     @Bean ApplicationRunner registerConfiguredKeys(JdbcTemplate jdbc,
-            @Value("${payflow.demo-api-key:}") String demoKey, @Value("${payflow.bootstrap-keys:}") String extra) {
+            @Value("${payflow.demo-api-key:}") String demoKey, @Value("${payflow.bootstrap-keys:}") String extra,
+            @Value("${payflow.require-strong-keys:false}") boolean strict) {
         return args -> {
             List<String[]> pairs = new ArrayList<>();
             if (!demoKey.isBlank()) pairs.add(new String[] {"demo_merchant", demoKey});
@@ -35,7 +47,7 @@ public class ApiKeyBootstrap {
             List<String> current = new ArrayList<>();
             for (String[] p : pairs) {
                 if (!p[0].matches("[A-Za-z0-9_-]{1,60}")) throw new IllegalArgumentException("Invalid merchant id");
-                if (p[1].length() < MIN_KEY_LENGTH) throw new IllegalArgumentException("API keys must be at least " + MIN_KEY_LENGTH + " characters");
+                checkKey(p[1], strict);
                 String hash = ApiKeyService.hash(p[1]);
                 current.add(hash);
                 jdbc.update("INSERT INTO merchants (id, display_name) VALUES (?, ?) ON CONFLICT (id) DO NOTHING", p[0], p[0]);
