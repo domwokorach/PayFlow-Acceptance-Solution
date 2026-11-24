@@ -122,6 +122,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [profileEl, setProfileEl] = useState<HTMLElement | null>(null);
+  const [loginRequired, setLoginRequired] = useState(false);
+  useEffect(() => { fetch("/api/auth/session", { cache: "no-store" }).then((r) => r.json()).then((d) => setLoginRequired(!!d.loginRequired)).catch(() => {}); }, []);
+  const signOut = async () => { try { await fetch("/api/auth/logout", { method: "POST" }); } finally { window.location.assign("/login"); } };
 
   useEffect(() => { try { setCollapsed(localStorage.getItem(STORE) === "1"); } catch { /* storage unavailable */ } }, []);
   const toggleCollapsed = () => setCollapsed((c) => { try { localStorage.setItem(STORE, c ? "0" : "1"); } catch { /* ignore */ } return !c; });
@@ -193,6 +196,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Divider />
           <MenuItem component={Link} href="/settings" onClick={() => setProfileEl(null)}>Settings</MenuItem>
           <MenuItem component={Link} href="/developers" onClick={() => setProfileEl(null)}>API documentation</MenuItem>
+          {loginRequired && <MenuItem onClick={() => { setProfileEl(null); void signOut(); }}>Sign out</MenuItem>}
+          {loginRequired && <MenuItem onClick={() => { setProfileEl(null); void signOut(); }}>Sign out</MenuItem>}
         </Menu>
 
         <Box component="main" id="main" tabIndex={-1} sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2, lg: 2.5 }, maxWidth: 1680, width: "100%", mx: "auto", outline: "none" }}>{children}</Box>

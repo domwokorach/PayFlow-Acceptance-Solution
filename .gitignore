@@ -6,3 +6,6 @@ out/
 *.tsbuildinfo
 coverage/
 reports/
+.vercel/
+.env.*
+!.env.example

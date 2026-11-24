@@ -16,7 +16,7 @@
   <img alt="Environment" src="https://img.shields.io/badge/environment-sandbox-orange">
 </p>
 
-> **Sandbox only.** PayFlow runs locally with simulated payments. No real money moves. It is **not production-ready**, has **not been certified** for live payment processing (including PCI DSS), and must not be used with real card data or deployed publicly. See [Security and sandbox limitations](#security-and-sandbox-limitations).
+> **Sandbox only.** PayFlow runs locally with simulated payments. No real money moves. It is **not production-ready**, has **not been certified** for live payment processing (including PCI DSS), and must not be used with real card data. Public hosting is limited to a single-operator sandbox (see [docs/deployment.md](docs/deployment.md)). See [Security and sandbox limitations](#security-and-sandbox-limitations).
 
 ## Overview
 
@@ -155,8 +155,11 @@ Keep real values in a local `.env`, which is excluded from Git. Only `.env.examp
 
 | Variable | Used by | Purpose |
 |---|---|---|
-| `PAYFLOW_API_ORIGIN` | Dashboard server proxy | Backend origin (default `http://localhost:8080`) |
-| `PAYFLOW_DEMO_API_KEY` | Dashboard server proxy | Local sandbox API key sent as `X-Demo-Api-Key` (server-side only) |
+| `PAYFLOW_API_ORIGIN` | Dashboard server proxy | Backend origin. Local default `http://localhost:8080`; **required, HTTPS, non-private on Vercel** |
+| `PAYFLOW_DEMO_API_KEY` | Dashboard server proxy | API key sent to the backend (server-side only). Local default is the demo key; **required, 32+ chars on Vercel** |
+| `PAYFLOW_DASHBOARD_USER`, `PAYFLOW_DASHBOARD_PASSWORD`, `PAYFLOW_SESSION_SECRET` | Dashboard server | Sign-in and session signing. **Required on Vercel** (password 14+, secret 32+ chars); optional locally |
+| `PAYFLOW_API_TIMEOUT_MS` | Dashboard server proxy | Upstream timeout, 1000–25000 (default 10000) |
+| `PAYFLOW_PUBLIC_DEPLOYMENT` | Dashboard server | Set `true` to apply Vercel's strict rules on another host |
 | `PAYFLOW_VISA_ENABLED` | Backend | Enable the optional Visa sandbox provider (`false` = simulator only) |
 | `PAYFLOW_VISA_MERCHANT_ID`, `PAYFLOW_VISA_KEY_ID`, `PAYFLOW_VISA_SHARED_SECRET` | Backend | Sandbox provider credentials (never expose to the browser) |
 | `PAYFLOW_SEED_DEMO_DATA` | Backend | Synthetic history for UI development only |
@@ -184,11 +187,11 @@ The suite covers notification logic and UI, live-event handling, merchants, paym
 
 ## Security and sandbox limitations
 
-**Do not deploy this milestone publicly.** It is intended for localhost sandbox use only.
+**Local mode is localhost-only.** Public hosting (Vercel + a hosted API) is supported only as a single-operator sandbox, following [docs/deployment.md](docs/deployment.md). On Vercel the dashboard refuses to run without explicit, strong configuration (no localhost or default-key fallback) and requires sign-in.
 
 - All payments are **simulated**; the optional Visa Acceptance sandbox uses test credentials only. No real funds move.
 - PayFlow is **not certified** for production payment processing and has had no PCI DSS assessment. Never enter real card numbers, PANs or CVVs.
-- There is **no end-user login and no role-based access control**: anyone who can reach the dashboard acts as the sandbox merchant. A public deployment would need OAuth2/OIDC sign-in, RBAC, CSRF/origin and rate-limit defences, secret management and an external threat review.
+- Public deployments have **one shared operator login** (signed HttpOnly session), a server-side route allowlist, same-origin checks on mutations and request limits. There are still **no per-user accounts or role-based access control**; OIDC sign-in, RBAC, sign-in audit logging and an external threat review are required before anything beyond a single-operator sandbox.
 - API keys and provider credentials stay in server-side environment variables, never in browser JavaScript or Git.
 - Capture and refund calls are idempotent and validated by the backend.
 

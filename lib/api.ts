@@ -10,6 +10,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   try { response = await fetch(`/api/${path}`, {cache: "no-store", ...options}); }
   catch { throw new ApiRequestError("Cannot reach PayFlow. Check your connection; data on screen may be out of date.", 0); }
   const data = await response.json().catch(() => ({}));
+  // Session expired or missing: sign in again rather than showing an opaque error.
+  if (response.status === 401 && typeof window !== "undefined" && window.location.pathname !== "/login") window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
   if (!response.ok) throw new ApiRequestError(data.error || `Request failed (${response.status})`, response.status, data.fields && typeof data.fields === "object" ? data.fields : {});
   return data as T;
 }

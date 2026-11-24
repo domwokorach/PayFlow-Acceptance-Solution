@@ -3,7 +3,6 @@ import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { Metadata, Viewport } from "next";
 import { Providers } from "../components/Providers";
-import { AppShell } from "../components/shell/AppShell";
 
 export const metadata: Metadata = {
   title: "PayFlow | Payment Operations",
@@ -17,7 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <InitColorSchemeScript attribute="data" defaultMode="system" />
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <Providers><AppShell>{children}</AppShell></Providers>
+          <Providers>{children}</Providers>
         </AppRouterCacheProvider>
       </body>
     </html>
