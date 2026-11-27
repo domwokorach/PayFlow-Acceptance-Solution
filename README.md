@@ -2,6 +2,24 @@
   <img src="docs/logo-readme.png" alt="PayFlow Acceptance Solution" width="320">
 </p>
 
+## Jenkins CI/CD Pipeline
+
+PayFlow integrates Jenkins for continuous integration
+and delivery pipeline orchestration, validation and
+CI/CD readiness.
+
+<p align="center">
+  <img
+    src="docs/images/jenkins-ci-cd-pipeline.webp"
+    alt="PayFlow Jenkins CI/CD successful pipeline"
+    width="100%"
+  />
+</p>
+
+<p align="center">
+  <em>PayFlow CI/CD — Successful Jenkins pipeline execution.</em>
+</p>
+
 <h1 align="center">PayFlow Acceptance Solution</h1>
 
 <p align="center">
