@@ -216,7 +216,10 @@ Running the same checks by hand: `cd backend && mvn test -Dtest='!*IntegrationTe
 The **PayFlow-CI-CD** job runs in Jenkins and is visualised below in the Jenkins Stages view. Build **#1** completed successfully in **7.8 seconds**, with every stage reporting success.
 
 <p align="center">
-  <img src="docs/images/jenkins-ci-cd-pipeline.webp" alt="Jenkins Stages view showing PayFlow-CI-CD build #1 completed successfully in 7.8 seconds" width="100%">
+  <picture>
+    <source srcset="docs/images/jenkins-ci-cd-pipeline.webp" type="image/webp">
+    <img src="docs/images/jenkins-ci-cd-pipeline.png" alt="Jenkins Stages view showing PayFlow-CI-CD build #1 completed successfully in 7.8 seconds" width="100%">
+  </picture>
   <br>
   <em>Figure: Jenkins pipeline <strong>PayFlow-CI-CD</strong>, build #1: all stages successful (7.8 s).</em>
 </p>
