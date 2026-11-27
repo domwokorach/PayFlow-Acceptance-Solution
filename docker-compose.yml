@@ -34,7 +34,7 @@ services:
       PAYFLOW_OTLP_ENABLED: ${PAYFLOW_OTLP_ENABLED:-false}
       PAYFLOW_OTLP_ENDPOINT: ${PAYFLOW_OTLP_ENDPOINT:-http://otel-collector:4318/v1/traces}
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${PAYFLOW_BACKEND_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
