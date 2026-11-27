@@ -211,6 +211,27 @@ A Jenkins pipeline (`Jenkinsfile`) builds and tests the platform on a dedicated 
 
 Running the same checks by hand: `cd backend && mvn test -Dtest='!*IntegrationTest'` (unit, no Docker), `mvn test -Dtest='*IntegrationTest'` (needs Docker), `cd frontend && npm run typecheck && npm run lint:eslint && npm run test:ci && npm run build`.
 
+## Jenkins CI/CD Pipeline
+
+The **PayFlow-CI-CD** job runs in Jenkins and is visualised below in the Jenkins Stages view. Build **#1** completed successfully in **7.8 seconds**, with every stage reporting success.
+
+<p align="center">
+  <img src="docs/images/jenkins-ci-cd-pipeline.webp" alt="Jenkins Stages view showing PayFlow-CI-CD build #1 completed successfully in 7.8 seconds" width="100%">
+  <br>
+  <em>Figure: Jenkins pipeline <strong>PayFlow-CI-CD</strong>, build #1: all stages successful (7.8 s).</em>
+</p>
+
+| Item | Detail |
+| --- | --- |
+| Pipeline | PayFlow-CI-CD |
+| Build | #1 |
+| Status | Successful |
+| Execution time | 7.8 seconds |
+
+**Stages shown:** Initialisation, Pipeline Validation, CI/CD Readiness, Complete, Post Actions.
+
+This run confirms that the Jenkins job executes end to end and that the pipeline is ready for CI/CD use. The stages in this screenshot are lightweight validation and readiness stages; the run does not show backend or frontend tests, Docker builds or deployments, so none of these is claimed as passed by this build. The full check suite is defined in the repository `Jenkinsfile` (see [`docs/jenkins-setup.md`](docs/jenkins-setup.md)), and neither Jenkins nor GitHub Actions deploys.
+
 ## Repository layout
 
 ```text
