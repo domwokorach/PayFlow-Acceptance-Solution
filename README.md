@@ -9,16 +9,25 @@ and delivery pipeline orchestration, validation and
 CI/CD readiness.
 
 <p align="center">
-  <img
-    src="docs/images/jenkins-ci-cd-pipeline.webp"
-    alt="PayFlow Jenkins CI/CD successful pipeline"
-    width="100%"
-  />
+  <picture>
+    <source srcset="docs/images/jenkins-ci-cd-pipeline.webp" type="image/webp">
+    <img
+      src="docs/images/jenkins-ci-cd-pipeline.png"
+      alt="Jenkins Stages view showing PayFlow-CI-CD build #1 completed successfully in 7.8 seconds"
+      width="100%"
+    />
+  </picture>
 </p>
 
 <p align="center">
   <em>PayFlow CI/CD — Successful Jenkins pipeline execution.</em>
 </p>
+
+**Pipeline:** PayFlow-CI-CD · **Build:** #1 · **Status:** Successful · **Execution time:** 7.8 seconds
+
+**Stages shown:** Initialisation, Pipeline Validation, CI/CD Readiness, Complete, Post Actions.
+
+This build shows the Jenkins job running end to end through its validation and readiness stages. It does not show automated tests, Docker builds or deployments, so none of those is claimed as passed by this run.
 
 <h1 align="center">PayFlow Acceptance Solution</h1>
 
@@ -32,6 +41,11 @@ CI/CD readiness.
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6">
   <img alt="Environment" src="https://img.shields.io/badge/environment-sandbox-orange">
+  <img alt="CI/CD: Jenkins" src="https://img.shields.io/badge/CI%2FCD-Jenkins-D24939?logo=jenkins&logoColor=white">
+  <img alt="Pipeline: passing" src="https://img.shields.io/badge/pipeline-passing-brightgreen">
+  <img alt="Build: success" src="https://img.shields.io/badge/build-success-brightgreen">
+  <img alt="Automation: Jenkins" src="https://img.shields.io/badge/automation-Jenkins-D24939?logo=jenkins&logoColor=white">
+  <img alt="Pipeline status: validated" src="https://img.shields.io/badge/pipeline-validated-brightgreen">
 </p>
 
 > **Sandbox only.** PayFlow runs locally with simulated payments. No real money moves. It is **not production-ready**, has **not been certified** for live payment processing (including PCI DSS), and must not be used with real card data or deployed publicly. See [Security and sandbox limitations](#security-and-sandbox-limitations).
