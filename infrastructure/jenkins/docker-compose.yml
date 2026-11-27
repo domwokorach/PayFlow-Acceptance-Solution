@@ -1,6 +1,6 @@
 # Jenkins for PayFlow. Start with ./bootstrap.sh (creates .env with generated secrets), then: docker compose up -d --build
 #   controller  http://localhost:8081   (bound to 127.0.0.1 only; no Docker socket; zero executors)
-#   agent       builds run here (JDK 21, Maven, Node 22, Docker CLI)
+#   agent       builds run here (JDK 21, Maven, Node 24, Docker CLI)
 #   docker      isolated Docker-in-Docker daemon used by Testcontainers and the end-to-end stack. It cannot see or touch
 #               the host's containers, volumes or the PayFlow dev stack.
 name: payflow-jenkins

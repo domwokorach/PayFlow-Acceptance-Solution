@@ -1,4 +1,4 @@
-// PayFlow CI pipeline (declarative). Runs on the dedicated `payflow-agent` build agent: JDK 21, Maven, Node 22, Docker CLI.
+// PayFlow CI pipeline (declarative). Runs on the dedicated `payflow-agent` build agent: JDK 21, Maven, Node 24 LTS, Docker CLI.
 // Docker access goes to an isolated Docker-in-Docker daemon (see infrastructure/jenkins), never to the host's Docker.
 //
 // Result policy
@@ -72,7 +72,10 @@ pipeline {
           java -version 2>&1 | head -1
           java -version 2>&1 | grep -q '"21\\.' || { echo "Java 21 is required" >&2; exit 1; }
           mvn -v | head -1
-          node -v | grep -q '^v22\\.' || { echo "Node 22 is required (found $(node -v))" >&2; exit 1; }
+          # Must match frontend/.nvmrc, package.json "engines" (^24.15.0: jsdom 31 needs it) and the frontend Dockerfile.
+          want="v$(tr -d '[:space:]' < frontend/.nvmrc)."
+          node -v | grep -q "^$want" || { echo "Node $(cat frontend/.nvmrc) is required (found $(node -v))" >&2; exit 1; }
+          node -e "const [a,b]=process.versions.node.split('.').map(Number); if(a<24||(a===24&&b<15)){console.error('Node >=24.15 required, found '+process.version);process.exit(1)}; if(typeof require('zlib').createZstdDecompress!=='function'){console.error('zlib zstd support missing: undici (jsdom) will crash');process.exit(1)}"
           echo "npm $(npm -v)"
           echo "Docker daemon (isolated): $(docker version --format '{{.Server.Version}} on {{.Server.Os}}/{{.Server.Arch}}')"
           docker info --format 'Containers on this daemon: {{.Containers}} (it is not the host Docker)'
@@ -144,17 +147,44 @@ pipeline {
           sh '''
             npm run typecheck
             npm run lint:eslint
-            rm -rf reports coverage
-            # Vitest: unit, React component (jsdom), API client, notification behaviour, payment UI interactions, hydration.
-            npm run test:ci
           '''
+        }
+      }
+    }
+
+    stage('Frontend Unit Tests') {
+      steps {
+        dir('frontend') {
+          sh 'node --version'
+          // Dependencies were installed by the Frontend Install stage (npm ci); no second install here.
+          sh 'rm -rf reports coverage && mkdir -p reports'
+          // Vitest: unit, React component (jsdom), API client, notification behaviour, payment UI interactions, hydration,
+          // server routes. `test:ci` = coverage + JUnit XML (reports/junit.xml) + coverage reports (coverage/: lcov, cobertura, html).
+          // Vitest exits non-zero on failing tests AND on unhandled errors, so either one fails this stage.
+          sh 'npm run test:ci'
         }
       }
       post {
         always {
-          junit testResults: 'frontend/reports/junit.xml', allowEmptyResults: false
-          sh '''python3 infrastructure/ci/verify_reports.py --label "Frontend" --dir frontend/reports --min-tests 80 \
-                  --require notification-utils,notifications-ui,payment-ui,hydration,merchants,live,countup,contrast'''
+          // Diagnostics are published even when tests fail.
+          junit testResults: 'frontend/reports/junit.xml', allowEmptyResults: false, skipMarkingBuildUnstable: false
+          script {
+            try {
+              publishHTML(target: [reportDir: 'frontend/coverage', reportFiles: 'index.html', reportName: 'Frontend Coverage (Vitest)',
+                                   keepAll: true, alwaysLinkToLastBuild: true, allowMissing: true])
+            } catch (err) { echo "HTML coverage not published (htmlpublisher plugin missing?): ${err.message}" }
+            try {
+              recordCoverage(tools: [[parser: 'COBERTURA', pattern: 'frontend/coverage/cobertura-coverage.xml']],
+                             id: 'frontend-coverage', name: 'Frontend Coverage', sourceCodeRetention: 'NEVER')
+            } catch (err) { echo "Coverage trend not recorded (coverage plugin missing?): ${err.message}" }
+          }
+          archiveArtifacts artifacts: 'frontend/reports/**, frontend/coverage/**', allowEmptyArchive: true
+          // Mandatory-report gate: fails when the report is missing/empty, tests were skipped, or the essential test files did not run.
+          sh '''python3 infrastructure/ci/verify_reports.py --label "Frontend" --dir frontend/reports --min-tests 140 \
+                  --require notification-utils,notifications-ui,payment-ui,hydration,merchants,live,countup,contrast,login-form,server-config,server-routes,server-session-policy
+                for f in frontend/coverage/lcov.info frontend/coverage/cobertura-coverage.xml frontend/coverage/index.html frontend/coverage/coverage-summary.json; do
+                  [ -s "$f" ] || { echo "Missing mandatory coverage report: $f" >&2; exit 1; }
+                done'''
         }
       }
     }

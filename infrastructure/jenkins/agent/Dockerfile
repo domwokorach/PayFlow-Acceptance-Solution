@@ -1,7 +1,7 @@
-# PayFlow build agent: JDK 21 + Maven + Node 22 + Docker CLI, connecting to the controller as an inbound (websocket) agent.
+# PayFlow build agent: JDK 21 + Maven + Node 24 + Docker CLI, connecting to the controller as an inbound (websocket) agent.
 # Multi-arch: every base image below publishes linux/arm64 and linux/amd64.
 FROM maven:3.9.11-eclipse-temurin-21 AS maven
-FROM node:22-bookworm-slim AS node
+FROM node:24-bookworm-slim AS node
 FROM docker:27-cli AS dockercli
 
 FROM jenkins/inbound-agent:latest-jdk21

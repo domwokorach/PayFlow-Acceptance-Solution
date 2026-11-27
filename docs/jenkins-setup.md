@@ -6,7 +6,7 @@ A local Jenkins that builds and tests the whole platform on every run: backend u
                      http://localhost:8081 (127.0.0.1 only)
 ┌──────────────────────────┐   websocket    ┌─────────────────────────────┐   TLS    ┌──────────────────────────┐
 │ jenkins (controller)     │◄───────────────│ agent  payflow-agent        │─────────►│ docker (Docker-in-Docker)│
-│ jenkins/jenkins:lts-jdk21│  low-privilege │ JDK 21 · Maven · Node 22    │ :2376    │ isolated daemon          │
+│ jenkins/jenkins:lts-jdk21│  low-privilege │ JDK 21 · Maven · Node 24    │ :2376    │ isolated daemon          │
 │ 0 executors, no Docker   │  agent user    │ Docker CLI · gitleaks · trivy│          │ Testcontainers + e2e stack│
 └──────────────────────────┘                └─────────────────────────────┘          └──────────────────────────┘
         your Docker Desktop containers (PayFlow stack on 3000/8080/5433) are never visible to any of the above
@@ -78,7 +78,8 @@ Installed at image build time from `controller/plugins.txt`, at the versions com
 | `junit` | Test result publishing |
 | `ws-cleanup` | `cleanWs()` after every build |
 | `timestamper`, `ansicolor`, `build-timeout` | Log timestamps, colours, the 75-minute build timeout |
-| `nodejs` | Installed as requested. Node 22 is baked into the build agent image, so no NodeJS tool installation is configured |
+| `htmlpublisher`, `coverage` | HTML coverage report and Cobertura coverage trend for the frontend. If the controller image was built before they were added, rebuild it (`docker compose build controller`); until then the pipeline logs a warning and still archives the reports |
+| `nodejs` | Installed as requested. Node 24 is baked into the build agent image, so no NodeJS tool installation is configured |
 | `configuration-as-code`, `job-dsl`, `matrix-auth` | Declarative configuration, the job definition, and the permission model |
 
 `docker-workflow` (Docker Pipeline) is intentionally not installed: the agent is a long-lived container with its tools baked in, so pipeline steps never need `docker.image(...).inside`.
@@ -120,12 +121,13 @@ It runs on the `payflow-agent` node and fails at the first red stage.
 | # | Stage | What it does | Failing means |
 |---|---|---|---|
 | 1 | **Checkout** | Cleans the workspace, `checkout scm`, records branch and commit (shown in the build name), verifies `backend/` and `frontend/` exist | repo unreachable or incomplete |
-| | Tooling and Docker preflight | Requires Java 21 and Node 22, and a reachable isolated Docker daemon | wrong tools or no Docker for integration tests |
+| | Tooling and Docker preflight | Requires Java 21 and Node 24 (matching `frontend/.nvmrc`), and a reachable isolated Docker daemon | wrong tools or no Docker for integration tests |
 | 2 | **Backend Build** | `mvn validate dependency:resolve`, then `clean package -DskipTests` | dependency or compile error |
 | 3 | **Backend Unit Tests** | `mvn test -Dtest='!*IntegrationTest'`: JUnit 5 and Mockito, no external services | a failing unit test |
 | 4 | **Backend Integration Tests** | `mvn test -Dtest='*IntegrationTest'`: PostgreSQL 17 via Testcontainers in the isolated daemon; Visa gateway mocked | a failing integration test |
 | 5 | **Frontend Install** | `npm ci` from the committed `package-lock.json` (never `npm init` or `npm install`) | lockfile out of sync |
-| 6 | **Frontend Quality Checks** | `tsc --noEmit`, ESLint, then Vitest with coverage (unit, React component, API client, notifications, payment UI, hydration) | type, lint or test failure |
+| 6 | **Frontend Quality Checks** | `tsc --noEmit` and ESLint | type or lint failure |
+| | **Frontend Unit Tests** | `npm run test:ci`: Vitest (unit, React component/jsdom, API client, notifications, payment UI, hydration, server routes) with coverage and JUnit XML. Publishes the JUnit results, an HTML coverage report and a Cobertura coverage trend, and archives `frontend/reports` and `frontend/coverage` **even when tests fail**. Then `verify_reports.py` fails the build if fewer than 140 tests ran, any test was skipped, an essential test file is missing, or a coverage report (lcov, Cobertura, HTML, summary) is absent. Vitest itself exits non-zero on unhandled errors | failing test, unhandled error, or missing report |
 | 7 | **Frontend Production Build** | `npm run build` (Next.js compile and type check) | build error |
 | | **End-to-End (isolated stack)** | Builds PostgreSQL + backend + frontend in the isolated daemon and runs `e2e_payment_flow.py`; always tears the stack down. Skippable with `RUN_E2E=false` | a broken flow |
 | 8 | **Security Checks** | `repo-hygiene.sh`, gitleaks on history and on this build's own reports, Trivy on `pom.xml` and `package-lock.json` | see below |
@@ -186,7 +188,7 @@ Each test stage also prints its own summary table (suites, tests, failures, skip
 | Build fails at Checkout: "references a local directory, which may be insecure" | You pointed `PAYFLOW_GIT_URL` at a local path without the local-repo override. Use the GitHub URL, or run with `-f docker-compose.local-repo.yml`. |
 | Build fails at Checkout: "Missing backend/pom.xml…" | The repository does not contain the full platform (see the GitHub section). |
 | `fatal: repository '/srv/payflow.git' does not exist` | The local repo mount went stale. Re-run `./make-local-repo.sh`, then `docker compose restart jenkins agent`. |
-| "Java 21 is required" / "Node 22 is required" | The agent image was changed or not rebuilt. `docker compose build agent && docker compose up -d agent`. |
+| "Java 21 is required" / "Node 24 is required" | The agent image was changed or not rebuilt. `docker compose build agent && docker compose up -d agent`. |
 | Preflight: Docker daemon not reachable; Testcontainers "Could not find a valid Docker environment" | The DinD container is not running or its certificates changed. `docker compose up -d docker agent`; if it persists, `docker compose restart docker agent`. |
 | Integration tests very slow the first time | PostgreSQL and Testcontainers' helper images are pulled into the isolated daemon once; they are cached in `dind_data`. |
 | `[ERROR] Surefire is going to kill self fork JVM…` in the log | Cosmetic. Cached Spring test contexts keep connection-pool housekeeping threads alive after the test database stops, so the forked JVM takes 30 s to exit. Results are unaffected. |
@@ -201,7 +203,7 @@ Each test stage also prints its own summary table (suites, tests, failures, skip
 
 Run on this machine (Apple Silicon, Docker Desktop) against a snapshot of the project, built with `make-local-repo.sh`:
 
-- Jenkins started at `http://localhost:8081`; all plugins in the table installed; the agent connected with JDK 21, Maven, Node 22, the isolated Docker daemon, gitleaks and trivy; the controller has 0 executors; anonymous access, and the agent user's access to the admin console, return 403.
+- Jenkins started at `http://localhost:8081`; all plugins in the table installed; the agent connected with JDK 21, Maven, Node 24, the isolated Docker daemon, gitleaks and trivy; the controller has 0 executors; anonymous access, and the agent user's access to the admin console, return 403.
 - The Jenkinsfile passed Jenkins' declarative linter, and the pipeline ran end to end: @@RESULT@@
 - Negative controls: gitleaks and `repo-hygiene.sh` fail on planted secrets, a committed `.env` and a key file; `verify_reports.py` fails when no reports exist or a required test class did not run.
 

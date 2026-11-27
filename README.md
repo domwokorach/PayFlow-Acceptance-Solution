@@ -196,7 +196,7 @@ docker compose --profile observability up -d --build
 
 ## Local testing guide (macOS)
 
-Prerequisites: Docker Desktop, Java 21+, Maven, Node 22.
+Prerequisites: Docker Desktop, Java 21+, Maven, Node 24 LTS (see `frontend/.nvmrc`).
 
 1. **Backend tests** (Testcontainers starts PostgreSQL; Docker must be running; Visa is mocked): `cd backend && mvn test`
 2. **Frontend**: `cd frontend && npm install && npm run lint && npm test && npm run build`
@@ -253,7 +253,7 @@ See [Architecture](docs/architecture.md), [Roadmap](docs/roadmap.md) and [Test s
 
 ## Local development without Docker builds
 
-If you have Maven 3.9+, Java 21, Node.js 22, npm and a local PostgreSQL database:
+If you have Maven 3.9+, Java 21, Node.js 24 LTS (>=24.15), npm and a local PostgreSQL database:
 
 1. Start a PostgreSQL database called `payflow` with user `payflow` and password `payflow_local` (or override the variables in `backend/src/main/resources/application.yml`).
 2. In `backend/`, run `SPRING_PROFILES_ACTIVE=demo mvn spring-boot:run`.
