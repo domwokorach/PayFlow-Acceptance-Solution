@@ -48,6 +48,10 @@ This build shows the Jenkins job running end to end through its validation and r
   <img alt="Pipeline status: validated" src="https://img.shields.io/badge/pipeline-validated-brightgreen">
 </p>
 
+<p align="center">
+  <sub>The Jenkins CI/CD, Build and Pipeline badges are static and reflect Jenkins build #1. They do not update automatically, because that would need a publicly accessible Jenkins build status endpoint.</sub>
+</p>
+
 > **Sandbox only.** PayFlow runs locally with simulated payments. No real money moves. It is **not production-ready**, has **not been certified** for live payment processing (including PCI DSS), and must not be used with real card data or deployed publicly. See [Security and sandbox limitations](#security-and-sandbox-limitations).
 
 ## Overview
