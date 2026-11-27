@@ -76,5 +76,8 @@
   "bugs": {
     "url": "https://github.com/domwokorach/PayFlow-Acceptance-Solution/issues"
   },
-  "homepage": "https://github.com/domwokorach/PayFlow-Acceptance-Solution#readme"
+  "homepage": "https://github.com/domwokorach/PayFlow-Acceptance-Solution#readme",
+  "engines": {
+    "node": ">=22.22.2"
+  }
 }
